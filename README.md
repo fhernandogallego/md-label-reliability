@@ -20,7 +20,7 @@ Main scripts: `analizar_curvas.py` (regime and lag dependence), `incertidumbre.p
 noise ceiling, noise sources), `analizar_prefijos.py`, `referencias.py` and `frontera.py` (truncated
 trajectories, stopping rules, cost-error frontier), `segmentos.py` (ageing within runs), `asignacion.py` and
 `validacion_asignacion.py` (adaptive replicate allocation and its check on real runs), `ml_demo.py`
-(random forest against the noise ceiling). Script comments are in Spanish.
+(random forest against the noise ceiling), `generalidad.py` (the same analyses for the anion diffusivity). Script comments are in Spanish.
 
 ## Reproducing the results
 

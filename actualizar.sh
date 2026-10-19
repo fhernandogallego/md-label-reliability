@@ -17,6 +17,7 @@ $PY techo.py > /dev/null 2>&1 && echo "techo de ruido: ok"             # despué
 $PY asignacion.py > /dev/null 2>&1 && echo "asignación adaptativa: ok"   # ~3 min; después de techo.py
 $PY validacion_asignacion.py > /dev/null 2>&1 && echo "validación real de la asignación: ok"
 $PY ml_demo.py > /dev/null 2>&1 && echo "demostración de aprendizaje automático: ok"   # ~1 min; necesita rdkit (requirements.txt)
+$PY generalidad.py > /dev/null 2>&1 && echo "generalidad (anión TFSI): ok"   # ~1 min; necesita rdkit
 $PY hacer_numeros.py | head -1
 if command -v tectonic >/dev/null; then (cd paper && tectonic main.tex 2>&1 | grep -E "error|Writing") 
 elif command -v pdflatex >/dev/null; then (cd paper && pdflatex -interaction=batchmode main && bibtex main && pdflatex -interaction=batchmode main && pdflatex -interaction=batchmode main) > /dev/null && echo "PDF regenerado"

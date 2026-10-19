@@ -95,7 +95,8 @@ be truncated to emulate shorter runs. Our contributions are:
   \item \textbf{Reliability and noise ceiling.} The run-to-run noise of a short label, its
         structural and dynamic sources and its dependence on mobility, the ceiling it imposes on
         any predictor trained or evaluated on such labels, a machine-learning model that reaches
-        that ceiling, and the ability of one short run to select the best candidates.
+        that ceiling, and the ability of one short run to select the best candidates, checked on a
+        second property, the anion diffusivity.
   \item \textbf{Spending the budget.} An evaluation of estimators and stopping rules on truncated
         trajectories, and an adaptive allocation of replicates that concentrates simulation on
         the candidates near the selection cut-off.
@@ -476,6 +477,30 @@ candidates with the measured noise).}\label{fig:allocation}
 \input{tabla_asignacion}
 \end{table}
 
+\subsection{A second property: the anion diffusivity}\label{sec:res-general}
+To test whether these conclusions depend on the property, we repeated the main analyses for the
+diffusivity of the TFSI anion (\cref{tab:general}). Because the platform distributes only the
+origin-averaged estimate for the anion, both ions are compared with that estimator. The anion
+label is much less noisy: its reliability is \genTfsiRel{} (95\% interval \genTfsiRelLo{} to
+\genTfsiRelHi) against \genLiRel{} for lithium, so its noise ceiling is higher (\genTfsiCeil{}
+against \genLiCeil) and a short run ranks the screening polymers better against the long runs
+(Spearman \genTfsiRhoScreen{} against \genLiRhoScreen). The structure of the results, however, is
+the same. The random forest reaches the ceiling for both ions (\genTfsiMl{} and \genLiMl), its
+correlation with the mean of two replicas rises as the measurement model predicts (\genTfsiMlMean{}
+against an expected \genTfsiMlMeanExp{} for the anion), and adaptive allocation matches four
+uniform replicates with less than half the runs ($\times$\genTfsiSaving{} and
+$\times$\genLiSaving{} for the top 10\%). The numbers are specific to each property, but the
+conclusions are not.
+
+\begin{table}[ht]
+\centering
+\caption{Main results for the lithium and the TFSI anion diffusivities, both with the
+origin-averaged estimator at half the run length. Noise statistics from the \nRep{} replicated
+systems; random forest and allocation as in the previous sections (allocation with constant
+noise).}\label{tab:general}
+\input{tabla_generalidad}
+\end{table}
+
 \subsection{Practical guidance}\label{sec:res-guide}
 \Cref{tab:guide} turns these results into recommendations, ordered from the least to the most
 demanding purpose. They apply to the setting studied (LiTFSI in amorphous polymers, PCFF+,
@@ -527,7 +552,9 @@ Simulate until the exponent is compatible with one and $\Dapp$ is flat across la
 \end{table}
 
 \subsection{Limitations}\label{sec:limitations}
-All systems share one force field, one temperature and one salt, and the long runs were chosen by
+All systems share one force field, one temperature and one salt; the conclusions hold for two
+properties, the lithium and anion diffusivities, but other properties, such as the conductivity,
+may have different noise. The long runs were chosen by
 the dataset's authors rather than at random. The reference lag of \SI{25}{\nano\second} is not a
 converged limit and shares data with the truncated trajectories, so prefix-based errors at long
 $T$ are optimistic. Self-diffusion is a proxy for conductivity, which also depends on ion
@@ -549,7 +576,8 @@ already reaches, and
 limits a single run to separating good from poor candidates. The same noise model shows how to
 spend a budget: one run per candidate and further runs only where the selection is uncertain find
 the best candidates as reliably as four uniform replicates at half the cost or less, whereas
-stopping individual runs adaptively saves nothing. Transport coefficients in the long-time limit
+stopping individual runs adaptively saves nothing. The same picture holds for the anion
+diffusivity, whose labels are less noisy. Transport coefficients in the long-time limit
 remain out of reach for most systems even with tenfold longer runs.
 
 % =============================================================================
