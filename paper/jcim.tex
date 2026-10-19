@@ -79,10 +79,16 @@ dataset's authors addressed both defects by training a multi-task graph network 
 few long runs, assuming noise independent of the polymer~\cite{Xie2022Accelerating}. Learning from
 noisy labels is well studied in machine learning~\cite{Frenay2014LabelNoise}, and the statistics
 of diffusion estimates from finite trajectories are well
-understood~\cite{He2018Variances,Bullerjahn2020Optimal,McCluskey2025Accurate}, but how reliable
-the labels of a real screening campaign are, what that reliability allows a model to learn, and how
-a practitioner should spend a fixed simulation budget have not been quantified on data of this
-size.
+understood~\cite{He2018Variances,Bullerjahn2020Optimal,McCluskey2025Accurate}. That measurement
+noise bounds the performance any model can show is also established: for experimental activity
+data, the replicate variability sets the maximum correlation or $R^2$ a model can
+reach~\cite{Brown2009Skepticism,Kramer2012Ki}, and computational neuroscience estimates the same
+bound as a noise ceiling~\cite{LageCastellanos2019NoiseCeiling}. For simulated labels, however,
+the noise of a real screening campaign has not been measured, its sources have not been separated,
+whether a model actually reaches the resulting ceiling has not been tested, and the noise has not
+been used to decide how a fixed simulation budget should be spent. Unlike experimental noise,
+simulation noise can be reduced at will by spending more computation, which turns the ceiling into
+a question of allocation.
 
 We answer these questions on HTP-MD without training a corrective model, using three features of
 the public collection: \nRep{} screening systems simulated twice from different initial
@@ -153,7 +159,9 @@ spread of all short runs, the reliability of one run is
 the fraction of the variance between candidates that reflects differences between systems. We
 also report the one-way intraclass correlation computed within the replicated subset. A predictor
 that recovered the property of every system exactly would correlate with one label at most
-$\sqrt r$ and explain at most a fraction $r$ of its variance; the mean of $n$ runs has
+$\sqrt r$ and explain at most a fraction $r$ of its variance, the bound used for experimental
+data~\cite{Brown2009Skepticism,Kramer2012Ki} and known as the noise ceiling in computational
+neuroscience~\cite{LageCastellanos2019NoiseCeiling}; the mean of $n$ runs has
 reliability $nr/[1+(n-1)r]$~\cite{Spearman1910,Brown1910}. To translate reliability into
 selection we simulate Gaussian populations with the measured variances and record the fraction of
 the truly best 5\%, 10\% and 20\% recovered when selecting by the mean of $n$ runs.
