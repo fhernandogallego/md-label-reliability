@@ -1,0 +1,88 @@
+{
+ "n_sistemas": 6042,
+ "n_trayectorias": 6137,
+ "fallos_smiles": 0,
+ "fiabilidad": 0.4707535527964626,
+ "fiabilidad_2rep": 0.6401528684413248,
+ "techo_correlacion": 0.6861148247898908,
+ "particiones": 5,
+ "todas": {
+  "pearson": 0.7099855112836417,
+  "pearson_ic95": [
+   0.6950415591690221,
+   0.7243447423595125
+  ],
+  "r2": 0.5040018995382933,
+  "fraccion_del_techo": 1.034791095646506,
+  "correlacion_implicita_con_propiedad": 1.034791095646506,
+  "correlacion_implicita_ic95": [
+   1.013010554584453,
+   1.055719416325582
+  ]
+ },
+ "replicados": {
+  "n": 94,
+  "pearson_A": 0.6678615436498654,
+  "pearson_A_ic95": [
+   0.5243779392140605,
+   0.7726508925756227
+  ],
+  "pearson_B": 0.6931730678047441,
+  "pearson_B_ic95": [
+   0.5602212351870219,
+   0.7955392686788935
+  ],
+  "pearson_media": 0.7790076416095252,
+  "pearson_media_ic95": [
+   0.6565671132927507,
+   0.856864139774984
+  ],
+  "media_esperada_por_el_modelo_de_medida": 0.7935681310761661,
+  "ganancia_media_ic95": [
+   0.06880196803220287,
+   0.13276095205481822
+  ]
+ },
+ "larga": {
+  "n": 133,
+  "todos": {
+   "n": 133,
+   "spearman_modelo": 0.7867140714744799,
+   "pearson_modelo": 0.8620253045740082,
+   "spearman_corrida_corta": 0.8389783821834096,
+   "pearson_corrida_corta": 0.9198123564953443,
+   "dif_spearman_modelo_menos_corta_ic95": [
+    -0.12904208360310274,
+    0.018970361147196503
+   ]
+  },
+  "cribado": {
+   "n": 96,
+   "spearman_modelo": 0.671228974498101,
+   "pearson_modelo": 0.7680821442649219,
+   "spearman_corrida_corta": 0.6758410200759631,
+   "pearson_corrida_corta": 0.716256693376996,
+   "dif_spearman_modelo_menos_corta_ic95": [
+    -0.12097470883900574,
+    0.1258841744776193
+   ]
+  },
+  "literatura": {
+   "n": 37,
+   "spearman_modelo": 0.6673779042200094,
+   "pearson_modelo": 0.7606297068385642,
+   "spearman_corrida_corta": 0.9279279279279279,
+   "pearson_corrida_corta": 0.9596822896518181,
+   "dif_spearman_modelo_menos_corta_ic95": [
+    -0.4675536656091354,
+    -0.12308127591461426
+   ]
+  }
+ },
+ "fuga": {
+  "n_trayectorias_replicadas_con_pareja_en_entrenamiento": 168,
+  "pearson_division_por_trayectoria": 0.6560163876455558,
+  "pearson_division_por_sistema": 0.6808599902086936,
+  "pearson_todas_division_por_trayectoria": 0.7101303386935501
+ }
+}

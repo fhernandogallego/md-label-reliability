@@ -1,0 +1,103 @@
+{
+ "n_replicados": 94,
+ "n_boot": 2000,
+ "semilla": 20261016,
+ "calibracion": {
+  "0.1": {
+   "n_predicciones": 188,
+   "brier": 0.0498067368287723,
+   "brier_tasa_base": 0.07786328655500223,
+   "mejora_brier_pct": 36.033092061187176,
+   "pendiente_calibracion": 1.1018803805068373,
+   "pendiente_ic95": [
+    0.6513308603952828,
+    2.2767165253958264
+   ],
+   "tramos": [
+    {
+     "pred_desde": 0,
+     "pred_hasta": 0.1,
+     "n": 152,
+     "pred_media": 0.05653789641504335,
+     "obs_frecuencia": 0.019736842105263157
+    },
+    {
+     "pred_desde": 0.1,
+     "pred_hasta": 0.5,
+     "n": 27,
+     "pred_media": 0.2007720121325234,
+     "obs_frecuencia": 0.25925925925925924
+    },
+    {
+     "pred_desde": 0.5,
+     "pred_hasta": 1,
+     "n": 9,
+     "pred_media": 0.8488086753955589,
+     "obs_frecuencia": 0.6666666666666666
+    }
+   ]
+  },
+  "0.2": {
+   "n_predicciones": 188,
+   "brier": 0.12651693293355956,
+   "brier_tasa_base": 0.1515108646446356,
+   "mejora_brier_pct": 16.496461669398155,
+   "pendiente_calibracion": 0.6347405432888265,
+   "pendiente_ic95": [
+    0.3362664982305862,
+    1.3474238688192386
+   ],
+   "tramos": [
+    {
+     "pred_desde": 0,
+     "pred_hasta": 0.1,
+     "n": 1,
+     "pred_media": 0.08798972746762157,
+     "obs_frecuencia": 1.0
+    },
+    {
+     "pred_desde": 0.1,
+     "pred_hasta": 0.5,
+     "n": 165,
+     "pred_media": 0.1841375554015302,
+     "obs_frecuencia": 0.12121212121212122
+    },
+    {
+     "pred_desde": 0.5,
+     "pred_hasta": 1,
+     "n": 22,
+     "pred_media": 0.7980531934885058,
+     "obs_frecuencia": 0.6363636363636364
+    }
+   ]
+  }
+ },
+ "campana": {
+  "n": 92,
+  "segundas_corridas": 46,
+  "0.1": {
+   "k": 9,
+   "solo_A": 0.6666666666666666,
+   "frontera": 0.7777777777777778,
+   "azar": 0.7085555555555555,
+   "A_y_B_todos": 0.7777777777777778,
+   "dif_frontera_azar_ic95": [
+    -0.16666666666666666,
+    0.16666666666666666
+   ],
+   "prob_frontera_mejor_o_igual": 0.887
+  },
+  "0.2": {
+   "k": 18,
+   "solo_A": 0.7222222222222222,
+   "frontera": 0.7222222222222222,
+   "azar": 0.7054166666666665,
+   "A_y_B_todos": 0.7222222222222222,
+   "dif_frontera_azar_ic95": [
+    -0.15384615384615385,
+    0.15384615384615385
+   ],
+   "prob_frontera_mejor_o_igual": 0.7325
+  }
+ }
+}

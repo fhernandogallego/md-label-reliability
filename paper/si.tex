@@ -1,0 +1,245 @@
+% =============================================================================
+%  Supporting Information for jcim.tex (J. Chem. Inf. Model.). Compile si.tex BEFORE jcim.tex:
+%  the manuscript imports the S-numbered labels of this document through xr.
+% =============================================================================
+\documentclass[journal=jcisd8,manuscript=suppinfo]{achemso}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage[section]{placeins}
+\usepackage{hyperref}
+\usepackage[capitalise]{cleveref}
+\input{preambulo_comun}
+
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\theequation}{S\arabic{equation}}
+
+\input{autores}
+
+\title{Supporting Information: Reliability of Short Molecular Dynamics Runs as Screening Labels}
+
+\begin{document}
+
+\section{Data set}\label{si:sec:data}
+\begin{table}[ht]
+\centering
+\caption{Data used in this study. All systems: LiTFSI in an amorphous polymer, PCFF+,
+\SI{353}{\kelvin}.}\label{si:tab:dataset}
+\begin{tabular}{lrr}
+\toprule
+ & \SI{5}{\nano\second} runs & \SI{50}{\nano\second} runs \\
+\midrule
+Trajectories & \nShort & \nLong \\
+MSD curves used (\Li, TFSI) & 100 lags each & 100 lags each \\
+Longest lag in the curve & \SI{5}{\nano\second} & \SI{50}{\nano\second} \\
+Systems also simulated at the other length & \nPairs & \nPairs \\
+Systems simulated twice at this length & \nRep & n/a \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Raw trajectories of the \nLong{} long runs were read as a stream, keeping only ion positions,
+the solvating polymer atoms and the system centre of mass. The origin-averaged MSD computed from
+them reproduces the curves distributed by the platform to within a relative deviation of
+\num{\valMaxDev} in every run, for lags up to 80\% of the run. Without subtracting the
+centre-of-mass motion, the MSD at a lag of \SI{25}{\nano\second} would be inflated by a median
+factor of \driftMed{} and by up to a factor of \driftMax{} (more than 10\% in \driftFracPct\% of
+the runs); the largest factors occur in the slowest systems, where a drift of the whole system
+by a few nanometres is comparable to the displacement of the lithium ions.
+
+\section{Sensitivity of the regime census and of the lag dependence}\label{si:sec:sens}
+\begin{table}[ht]
+\centering
+\caption{Sensitivity of the regime census to the lag window used to fit the effective exponent.
+The main text uses 0.2 to 0.6.}\label{si:tab:sens-window}
+\resizebox{\textwidth}{!}{\input{tabla_sensibilidad}}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Sensitivity of the lag dependence in the \nLong{} long runs to the reference lag
+$\tau_{\mathrm{ref}}$. The main text uses \SI{25}{\nano\second}.}\label{si:tab:sens-ref}
+\input{tabla_sensibilidad_ref}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Apparent diffusivity and ranking as a function of the observed lag in the long runs,
+relative to a lag of \SI{25}{\nano\second} (curve-based).}\label{si:tab:lag}
+\begin{tabular}{rrrrr}
+\toprule
+Lag (ns) & Median ratio & 10th to 90th percentile & Within 25\% & Spearman $\rho$ \\
+\midrule
+0.5 & \ratioHalf & \ratioHalfLo{} to \ratioHalfHi & \withinHalfPct\% & \rhoHalf \\
+1   & \ratioOne & \ratioOneLo{} to \ratioOneHi & \withinOnePct\% & \rhoOne \\
+2   & \ratioTwo & \ratioTwoLo{} to \ratioTwoHi & \withinTwoPct\% & \rhoTwo \\
+5   & \ratioFive & \ratioFiveLo{} to \ratioFiveHi & \withinFivePct\% & \rhoFive \\
+10  & \ratioTen & \ratioTenLo{} to \ratioTenHi & \withinTenPct\% & \rhoTen \\
+15  & \ratioFifteen & \ratioFifteenLo{} to \ratioFifteenHi & \withinFifteenPct\% & \rhoFifteen \\
+20  & \ratioTwenty & \ratioTwentyLo{} to \ratioTwentyHi & \withinTwentyPct\% & \rhoTwenty \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Run-to-run reproducibility}\label{si:sec:rep}
+\begin{table}[ht]
+\centering
+\caption{Reproducibility of a single \SI{5}{\nano\second} run, from \nRep{} systems simulated
+twice from different initial structures. Intervals by bootstrap over systems.}\label{si:tab:replicas}
+\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrr}
+\toprule
+Estimator & $\sigma_{\mathrm{run}}$ (log) & Typical factor & Rank corr.\ between runs & Reliability $r$ (95\% CI) & ICC(1) (95\% CI) \\
+\midrule
+End-point & \RepEndSd & \RepEndFactor & \RepEndRho & \RepEndIcc{} (\RepEndIccLo{} to \RepEndIccHi) & \RepEndIccSub{} (\RepEndIccSubLo{} to \RepEndIccSubHi) \\
+Origin-averaged, lag $T/2$ & \RepAvgSd & \RepAvgFactor & \RepAvgRho & \RepAvgIcc{} (\RepAvgIccLo{} to \RepAvgIccHi) & \RepAvgIccSub{} (\RepAvgIccSubLo{} to \RepAvgIccSubHi) \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Two runs of the same system differ by more than a factor of 1.5 in \RepEndDiffPct\% of the
+replicated systems. The replicated subset is not range-restricted (spread of $\ln\Dapp$
+\RepEndSdSub{} against \RepEndSdAll{} in the whole screening set). The effective exponent of an
+individual \SI{5}{\nano\second} run is not reproducible (noise \RepBetaSd, rank correlation
+between runs \RepBetaRho): it characterises the population, not a single system.
+
+\section{End-point estimator}\label{si:sec:endpoint}
+The end-point value of the \SI{5}{\nano\second} runs deviates from the power law fitted over
+20\% to 60\% of the same curve with a standard deviation of \epSd{} in log units, a typical factor of
+\epFactor{} (\cref{si:fig:endpoint}); \epOutOnePointFivePct\% of the systems deviate by more than
+a factor of 1.5, and the rank correlation between the end-point estimate and the origin-averaged
+estimate at half the run length is \epRho. This deviation combines the single-origin noise of the
+end point with any departure of the curve from a power law; the replicated runs
+(\cref{si:tab:replicas}) give the direct comparison of the two estimators.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.55\textwidth]{figures/fig3_endpoint_noise.pdf}
+\caption{Deviation of the end-point MSD of the \SI{5}{\nano\second} runs from the power law
+fitted over lags between 20\% and 60\% of the run. Dashed lines mark a factor of two.}
+\label{si:fig:endpoint}
+\end{figure}
+
+\section{Paired short and long runs}\label{si:sec:pairs}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.5\textwidth]{figures/fig4_short_vs_long.pdf}
+\caption{End-point apparent diffusivity from the \SI{5}{\nano\second} run against the
+origin-averaged apparent diffusivity at a lag of \SI{25}{\nano\second} from the
+\SI{50}{\nano\second} run of the same system, which starts from the same initial structure
+(\nPairs{} systems). The dashed line is the identity.}
+\label{si:fig:pairs}
+\end{figure}
+
+\section{Prefix-based estimators and stopping rules}\label{si:sec:prefix}
+\begin{table}[ht]
+\centering
+\caption{Estimates from a prefix of length $T$ relative to the reference
+$\Dapp(\SI{25}{\nano\second})$ of the full \SI{50}{\nano\second} run: median ratio and typical
+multiplicative error (\nPrefix{} runs).}\label{si:tab:prefix}
+\resizebox{\textwidth}{!}{\input{tabla_prefijos}}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Sensitivity of the prefix-based comparison to the reference (\refN{} long runs). Each
+cell gives the typical multiplicative error and, in parentheses, the median ratio of the estimate
+to the reference. The power law is extrapolated to the quantity that defines each reference: the
+apparent diffusivity at that lag, or the mean slope of $A\tau^{\beta}$ over
+20 to \SI{40}{\nano\second}.}\label{si:tab:sens-prefix-ref}
+\resizebox{\textwidth}{!}{\input{tabla_referencias}}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Stopping rules evaluated on the long runs (\nPrefix{} runs). Runs that do not meet a
+rule before \SI{50}{\nano\second} are simulated for the full length and evaluated there. Mean
+time and the first error column are averaged over all runs; the last column restricts the error
+to the runs that stop early.}\label{si:tab:rules}
+\resizebox{\textwidth}{!}{\input{tabla_reglas}}
+\end{table}
+
+The regime rules rarely fire: the effective exponent of a prefix reaches 0.9 before
+\SI{50}{\nano\second} in \ruleBetaNineStopPct\% of the runs and 0.8 in \ruleBetaEightStopPct\%,
+so they save almost no simulation, and when the $\beta\ge0.8$ rule fires the error of the runs
+that stop is \ruleBetaEightErrStop. The precision rule with a 20\% tolerance stops early in
+\ruleCvTwentyStopPct\% of the runs but with a typical error of \ruleCvTwentyErrStop{} for those
+runs: a small bootstrap CV measures the precision of a lag-dependent quantity, not its distance
+from the long-lag value.
+
+\begin{table}[ht]
+\centering
+\caption{Settings chosen on half of the systems and evaluated on the other half (median over
+\frSplits{} random partitions): mean simulated time, typical error, and percentage of partitions
+in which the held-out half meets the target. A dash means that no setting met the target on the
+half used for the choice.}\label{si:tab:frontier}
+\resizebox{\textwidth}{!}{\input{tabla_frontera}}
+\end{table}
+
+\section{Robustness of the adaptive allocation}\label{si:sec:alloc}
+\begin{table}[ht]
+\centering
+\caption{Mean number of \SI{5}{\nano\second} runs per candidate that boundary-focused allocation
+needs to match the recall of uniform replicates, and the corresponding saving (end-point label,
+Gaussian system values, \alReps{} simulated campaigns of \alN{} candidates).}\label{si:tab:alloc-eq}
+\begin{tabular}{lrrr}
+\toprule
+ & \multicolumn{3}{c}{Uniform replicates matched} \\
+\cmidrule(lr){2-4}
+Target & 2 runs & 3 runs & 4 runs \\
+\midrule
+Top 1\%  & \alEqTopOneUnifTwo{} ($\times$\alSavingTopOneUnifTwo) & \alEqTopOneUnifThree{} ($\times$\alSavingTopOneUnifThree) & \alEqTopOneUnifFour{} ($\times$\alSavingTopOneUnifFour) \\
+Top 5\%  & \alEqTopFiveUnifTwo{} ($\times$\alSavingTopFiveUnifTwo) & \alEqTopFiveUnifThree{} ($\times$\alSavingTopFiveUnifThree) & \alEqTopFiveUnifFour{} ($\times$\alSavingTopFiveUnifFour) \\
+Top 10\% & \alEqTopTenUnifTwo{} ($\times$\alSavingTopTenUnifTwo) & \alEqTopTenUnifThree{} ($\times$\alSavingTopTenUnifThree) & \alEqTopTenUnifFour{} ($\times$\alSavingTopTenUnifFour) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The saving for the top 10\% against four uniform replicates is $\times$\alSavingTopTenUnifFourEmpEnd{}
+when the system values follow the empirical shape of the \nShort{} short runs instead of a normal
+distribution, and $\times$\alSavingTopTenUnifFourNormAvg{} with the origin-averaged label. Using
+the mobility-dependent noise in the allocation does not help: the recall of the top 10\% with
+four runs per candidate is \alBoundTopTenBFour\% with it and \alBoundHomoTopTenBFour\% with a
+constant noise.
+Successive halving with restarted rounds performs similarly to boundary-focused allocation. With
+the end-point label and 1.25 runs per candidate it recovers \alHalvingTopOneBOneQuarterEnd\% of the top 1\%,
+against \alBoundTopOneBOneQuarterEnd\%; with the origin-averaged label and four runs per candidate it recovers
+\alHalvingTopOneBFourAvg\%, against \alBoundTopOneBFourAvg\%.
+
+\section{Check of the adaptive allocation on real runs}\label{si:sec:val-alloc}
+\begin{table}[ht]
+\centering
+\caption{Check of the adaptive allocation on the replicated systems. Calibration: \valAlNRep{}
+systems, predictions in both directions (first run $\to$ second and second $\to$ first), noise
+parameters estimated leaving out the system evaluated. Campaign: \valAlNCamp{} systems with a long
+run; every system receives its first run and \valAlExtra{} receive a second run, chosen at the
+boundary or at random (mean of 2000 draws); recall of the top set according to the long run.
+Interval: bootstrap over systems of the difference between boundary and random placement.}
+\label{si:tab:val-alloc}
+\begin{tabular}{lrr}
+\toprule
+ & Top 10\% & Top 20\% \\
+\midrule
+Brier improvement over the base rate & \valAlBrierGainTen\% & \valAlBrierGainTwenty\% \\
+Calibration slope (95\% CI) & \valAlCalSlopeTen{} (\valAlCalSlopeLoTen{} to \valAlCalSlopeHiTen) & \valAlCalSlopeTwenty{} (\valAlCalSlopeLoTwenty{} to \valAlCalSlopeHiTwenty) \\
+\addlinespace
+Systems in the top set, $k$ & \valAlKTen & \valAlKTwenty \\
+Recall, first runs only & \valAlOnlyATen\% & \valAlOnlyATwenty\% \\
+Recall, second runs at random & \valAlRandomTen\% & \valAlRandomTwenty\% \\
+Recall, second runs at the boundary & \valAlBoundTen\% & \valAlBoundTwenty\% \\
+Recall, second runs for all & \valAlBothTen\% & \valAlBothTwenty\% \\
+Boundary $-$ random (95\% CI, points) & $\valAlDiffLoTen$ to $+\valAlDiffHiTen$ & $\valAlDiffLoTwenty$ to $+\valAlDiffHiTwenty$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The long runs start from the same structure as the first runs, so they favour the first run and
+understate the value of any second run from a new structure; this is why no strategy improves on
+the first run alone for the top 20\%, and why the check is conservative.
+
+\end{document}

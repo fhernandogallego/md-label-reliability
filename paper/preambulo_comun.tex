@@ -1,0 +1,15 @@
+% Macros compartidas por jcim.tex (manuscrito) y si.tex (Supporting Information).
+% Todas las cifras proceden de los ficheros numeros*.tex generados por los scripts; no se escriben a mano.
+\input{numeros}
+\input{numeros_referencias}
+\input{numeros_frontera}
+\input{numeros_techo}
+\input{numeros_asignacion}
+\input{numeros_validacion}
+\input{numeros_ml}
+\IfFileExists{numeros_segmentos.tex}{\input{numeros_segmentos}\newcommand{\haySegmentos}{1}}{}
+\DeclareSIUnit{\angstrom}{\text{\AA}}
+\newcommand{\todo}[1]{\textcolor{orange!80!black}{[TODO: #1]}}
+\newcommand{\Dapp}{D_{\mathrm{app}}}
+\newcommand{\Li}{Li$^{+}$}
+\newcommand{\msd}{\mathrm{MSD}}
