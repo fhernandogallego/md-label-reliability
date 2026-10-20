@@ -68,6 +68,15 @@ if os.path.exists("resultados/incertidumbre.json"):                      # gener
         M[f"{nom}RhoScreen"] = f2(Q["spearman_cribado"]); M[f"{nom}RhoLit"] = f2(Q["spearman_literatura"])
         for frac, fn in ((5, "Five"), (10, "Ten"), (20, "Twenty")):
             s = Q[f"top{frac}"]; M[f"{nom}Top{fn}K"] = str(s["k"]); M[f"{nom}Top{fn}Hits"] = str(s["aciertos"])
+if os.path.exists("resultados/tamanos.csv"):                              # generado por tamanos.py (Miti)
+    import pandas as pd
+    E = pd.read_csv("resultados/tamanos.csv")
+    n0 = lambda x: f"{x:,.0f}".replace(",", "{,}")
+    M.update({"tamNAtomsMed": n0(E.n_atomos.median()), "tamNAtomsMin": n0(E.n_atomos.min()), "tamNAtomsMax": n0(E.n_atomos.max()),
+              "tamChainsMed": f"{E.n_cadenas.median():.0f}", "tamChainsMin": f"{E.n_cadenas.min():.0f}", "tamChainsMax": f"{E.n_cadenas.max():.0f}",
+              "tamBoxMin": f"{E.lx_A.min() / 10:.1f}", "tamBoxMax": f"{E.lx_A.max() / 10:.1f}", "tamBoxMed": f"{E.lx_A.median() / 10:.1f}",
+              "tamNIons": f"{E.n_li.median():.0f}", "tamIonsAllEqual": "1" if E.n_li.nunique() == 1 and E.n_tfsi.nunique() == 1 else "0",
+              "tamNRecount": str(int((E.fuente_iones_cadenas == "recuento").sum()))})
 with open("paper/numeros.tex", "w") as fh:
     fh.write("% Generado por hacer_numeros.py a partir de resultados/preliminar.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")

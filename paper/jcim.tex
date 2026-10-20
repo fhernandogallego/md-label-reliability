@@ -123,9 +123,13 @@ long run has a \SI{5}{\nano\second} run of the same system (\nLongScreen{} scree
 \nLongLit{} taken from the literature), and, as in the original study~\cite{Xie2022Accelerating},
 the two runs of such a pair start from the same initial amorphous structure. In addition, \nRep{}
 screening systems were simulated twice for \SI{5}{\nano\second} from different initial
-structures. Every system contains 50 LiTFSI ion pairs at a molality of
-\SI{1.5}{\mole\per\kilo\gram} in polymer chains with 150 backbone atoms, equilibrated for
-\SI{5}{\nano\second} before production~\cite{Xie2022Accelerating}.
+structures. Every system contains \tamNIons{} LiTFSI ion pairs at a molality of
+\SI{1.5}{\mole\per\kilo\gram}, equilibrated for \SI{5}{\nano\second} before
+production~\cite{Xie2022Accelerating}; from the starting structures, the systems have
+\tamNAtomsMin{} to \tamNAtomsMax{} atoms (median \tamNAtomsMed) in \tamChainsMin{} to
+\tamChainsMax{} polymer chains (median \tamChainsMed), in cubic boxes of \tamBoxMin{} to
+\SI{\tamBoxMax}{\nano\metre} side (ion and chain counts verified on \tamNRecount{} complete
+structure files).
 
 \subsection{Labels and their time dependence}\label{sec:labels}
 For an MSD curve averaged over time origins and ions,
