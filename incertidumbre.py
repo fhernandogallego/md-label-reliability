@@ -72,6 +72,15 @@ for col in ("D5_extremos", "D5_medio"):
         e[f"top{round(100 * frac)}"] = s
     R["pares"][col] = e
 
+# selección dentro del cribado: el top de los 133 pares lo forman casi solo polímeros de literatura (al final, para no
+# alterar los números aleatorios de lo anterior)
+S = P[~P.literatura]; nS = len(S); R["pares"]["cribado"] = {"n": nS}
+for frac in (0.05, 0.10, 0.20):
+    kk = max(1, round(frac * n)); R["pares"]["cribado"][f"literatura_en_top{round(100 * frac)}_de_todos"] = int(P.loc[P.D50.nlargest(kk).index, "literatura"].sum())
+    s = seleccion(S, "D5_extremos", frac); br = []
+    for _ in range(N_BOOT):
+        Q = S.iloc[np.unique(rng.integers(0, nS, nS))]; br.append(seleccion(Q, "D5_extremos", frac)["recall"])
+    s["recall_ic95"] = ic(br); R["pares"]["cribado"][f"top{round(100 * frac)}"] = s
 json.dump(R, open("resultados/incertidumbre.json", "w"), indent=1)
 
 with open("paper/tabla_seleccion.tex", "w") as fh:
@@ -81,6 +90,9 @@ with open("paper/tabla_seleccion.tex", "w") as fh:
         for j, frac in enumerate((5, 10, 20)):
             s = R["pares"][col][f"top{frac}"]; lo, hi = s["recall_ic95"]
             fh.write(f"{nom if j == 0 else ''} & {frac}\\% & {s['k']} & {s['aciertos']} & {100 * s['recall']:.0f}\\% ({100 * lo:.0f} to {100 * hi:.0f}) & {100 * s['azar']:.0f}\\% \\\\\n")
+    for j, frac in enumerate((5, 10, 20)):
+        s = R["pares"]["cribado"][f"top{frac}"]; lo, hi = s["recall_ic95"]
+        fh.write(f"{'End-point, screening only' if j == 0 else ''} & {frac}\\% & {s['k']} & {s['aciertos']} & {100 * s['recall']:.0f}\\% ({100 * lo:.0f} to {100 * hi:.0f}) & {100 * s['azar']:.0f}\\% \\\\\n")
     fh.write("\\bottomrule\n\\end{tabular}\n")
 
 print(json.dumps(R, indent=1))

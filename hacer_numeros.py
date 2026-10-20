@@ -50,6 +50,13 @@ if os.path.exists("resultados/prefijos.json"):
         M[f"rule{nom}StopPct"] = f"{100 * x['frac_para']:.0f}"; M[f"rule{nom}Time"] = f"{x['T_medio_total']:.1f}"
         M[f"rule{nom}Err"] = f2(x["factor_error"]); M[f"rule{nom}ErrStop"] = f2(x["factor_error_si_para"]) if x["factor_error_si_para"] else "n/a"
         M[f"rule{nom}TimeStop"] = f"{x['T_medio_si_para']:.1f}" if x["T_medio_si_para"] else "n/a"
+if os.path.exists("resultados/incertidumbre.json") and "cribado" in json.load(open("resultados/incertidumbre.json"))["pares"]:
+    C = json.load(open("resultados/incertidumbre.json"))["pares"]["cribado"]
+    for frac, fn in ((5, "Five"), (10, "Ten"), (20, "Twenty")):
+        q = C[f"top{frac}"]
+        M[f"ScrTop{fn}K"] = str(q["k"]); M[f"ScrTop{fn}Hits"] = str(q["aciertos"]); M[f"ScrTop{fn}Recall"] = f"{100 * q['recall']:.0f}"
+        M[f"LitInTop{fn}"] = str(C[f"literatura_en_top{frac}_de_todos"])
+    M["ScrN"] = str(C["n"])
 if os.path.exists("resultados/sensibilidad.json"):                       # generado por sensibilidad.py
     S = json.load(open("resultados/sensibilidad.json"))["ventanas"]
     sub = [v["50"]["sub_0.7"] for v in S]; dif = [v["50"]["dif_0.9"] for v in S]

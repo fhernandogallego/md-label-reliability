@@ -46,14 +46,16 @@ electrolyte trajectories (\nShort{} runs of \SI{5}{\nano\second} and \nLong{} of
 \betaLongDiffN{} long runs, the apparent diffusivity at a \SI{5}{\nano\second} lag is
 \ratioFive{} times that at \SI{25}{\nano\second}, and the first \SI{5}{\nano\second} of a run
 are \segEndFirst{} times faster than its second half, biasing every short label upwards. From \nRep{} systems simulated twice, a single
-\SI{5}{\nano\second} label has reliability \RepEndIcc{} (95\% CI \RepEndIccLo{} to \RepEndIccHi):
-no model can correlate with such labels much beyond \techoEndCorr, a ceiling that a random
-forest on monomer fingerprints already reaches (\mlCorr), and roughly half of the run-to-run noise comes from the
-initial structure and half from the dynamics. A short run nevertheless ranks widely different polymers well (Spearman
-\PairEndRhoLit) and recovers \PairEndRecall\% of the top fifth, but not similar ones (Spearman
-\PairEndRhoScreen{} within the screening set). Giving one run to every candidate and further runs only to those
-whose membership of the top set is uncertain matches four uniform replicates with \alEqTopTenUnifFour{} runs per candidate for the top 10\% and
-\alEqTopOneUnifFour{} for the top 1\%. A decision guide and all code are provided.
+\SI{5}{\nano\second} end-point label has reliability \RepEndIcc{} (95\% CI \RepEndIccLo{} to
+\RepEndIccHi): no model can correlate with such labels much beyond about \techoEndCorr, a
+random forest on monomer fingerprints is indistinguishable from that ceiling (\mlCorr), and
+roughly half of the run-to-run noise comes from the initial structure. A short run ranks widely
+different polymers well (Spearman \PairEndRhoLit) but not similar ones (\PairEndRhoScreen{} within
+the screening set). In simulations with the measured noise, giving further runs only to candidates
+whose membership of the top set is uncertain matches four uniform replicates with
+\alEqTopTenUnifFour{} runs per candidate for the top 10\% and \alEqTopOneUnifFour{} for the top
+1\%; a check on real runs is consistent but underpowered. A decision guide and all code are
+provided.
 \end{abstract}
 
 % =============================================================================
@@ -84,11 +86,13 @@ noise bounds the performance any model can show is also established: for experim
 data, the replicate variability sets the maximum correlation or $R^2$ a model can
 reach~\cite{Brown2009Skepticism,Kramer2012Ki}, and computational neuroscience estimates the same
 bound as a noise ceiling~\cite{LageCastellanos2019NoiseCeiling}. For simulated labels, however,
-the noise of a real screening campaign has not been measured, its sources have not been separated,
+to our knowledge the noise across a real screening campaign has not been measured, although the
+same question has been raised for chemistry datasets in general~\cite{Crusius2025FittingNoise}; its
+sources have not been separated,
 whether a model actually reaches the resulting ceiling has not been tested, and the noise has not
 been used to decide how a fixed simulation budget should be spent. Unlike experimental noise,
-simulation noise can be reduced at will by spending more computation, which turns the ceiling into
-a question of allocation.
+simulation noise can be reduced by spending more computation, which turns the ceiling into a
+question of allocation.
 
 We answer these questions on HTP-MD without training a corrective model, using three features of
 the public collection: \nRep{} screening systems simulated twice from different initial
@@ -96,8 +100,8 @@ structures, \nPairs{} systems simulated at both lengths, and the raw long trajec
 be truncated to emulate shorter runs. Our contributions are:
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item \textbf{Time dependence of the labels.} A census of all \nTotal{} trajectories, the
-        lag dependence of the apparent diffusivity in the long runs, and an ageing of the polymer
-        matrix that makes the beginning of every run faster than its later part.
+        lag dependence of the apparent diffusivity in the long runs, and a slow decrease of lithium
+        mobility within each run that makes its beginning faster than its later part.
   \item \textbf{Reliability and noise ceiling.} The run-to-run noise of a short label, its
         structural and dynamic sources and its dependence on mobility, the ceiling it imposes on
         any predictor trained or evaluated on such labels, a machine-learning model that reaches
@@ -123,7 +127,7 @@ long run has a \SI{5}{\nano\second} run of the same system (\nLongScreen{} scree
 \nLongLit{} taken from the literature), and, as in the original study~\cite{Xie2022Accelerating},
 the two runs of such a pair start from the same initial amorphous structure. In addition, \nRep{}
 screening systems were simulated twice for \SI{5}{\nano\second} from different initial
-structures. Every system contains \tamNIons{} LiTFSI ion pairs at a molality of
+structures. Every system contains \tamNIons{} LiTFSI ion pairs at a nominal molality of
 \SI{1.5}{\mole\per\kilo\gram}, equilibrated for \SI{5}{\nano\second} before
 production~\cite{Xie2022Accelerating}; from the starting structures, the systems have
 \tamNAtomsMin{} to \tamNAtomsMax{} atoms (median \tamNAtomsMed) in \tamChainsMin{} to
@@ -259,8 +263,11 @@ faster than the segments between 25 and \SI{50}{\nano\second} (95\% interval \se
 not a short transient: the apparent diffusivity keeps falling by a factor of \segEndSlope{} every
 \SI{10}{\nano\second} between 5 and \SI{50}{\nano\second}, in \segEndFracNegSlopePct\% of the
 systems, and the effective exponent of the segments decreases from \segBetaFirst{} in the first
-to \segBetaLate{} in the late ones. The polymer matrix therefore keeps ageing throughout the runs,
-despite the \SI{5}{\nano\second} equilibration that precedes production~\cite{Xie2022Accelerating}.
+to \segBetaLate{} in the late ones. Lithium mobility therefore keeps decreasing throughout the
+runs, despite the \SI{5}{\nano\second} equilibration that precedes
+production~\cite{Xie2022Accelerating}; we measure this slowdown, not its cause, which is consistent
+with a slow conformational relaxation of the polymer or of the lithium coordination network that the
+equilibration does not complete.
 The effect is stronger for the screening polymers (\segEndFirstScreen) than for those taken from
 the literature (\segEndFirstLit).
 
@@ -306,7 +313,11 @@ ratio of \techoEndShortPrefRatio{} with a noise of \techoEndSdDyn, against \RepE
 replicas from different structures: the initial structure accounts for
 \techoEndFracStructPct\% (\techoEndFracStructLo{} to \techoEndFracStructHi\%) of the run-to-run variance
 and the dynamics for the rest. Re-sampling the structure and averaging the dynamics both reduce the
-noise, and a replicate should start from a new structure rather than extend the same run. The noise
+noise. A replicate that starts from a new structure samples both sources, as ensembles of
+independent runs do in other MD applications~\cite{Coveney2016Ensembles}, but it also costs a new
+equilibration; whether it beats extending the same run at equal cost cannot be decided with these
+data. This does not affect the allocation results below, in which every run, uniform or adaptive,
+starts from a new structure. The noise
 also depends on mobility: it is \techoEndSdSlow{} in the slower half of the replicated systems and
 \techoEndSdFast{} in the faster half (rank correlation between the absolute difference and the
 level $\techoEndHetRho$, $p=\techoEndHetP$), whereas the learning model of the original study assumes
@@ -334,13 +345,16 @@ fingerprints (radius 2, 2048 bits) of the monomer of each of the \mlNSys{} scree
 the end-point label of its original \SI{5}{\nano\second} run as target, and obtained
 out-of-sample predictions by \mlFolds-fold cross-validation split by system. The predictions
 correlate with the labels with Pearson $r=\mlCorr$ (95\% interval \mlCorrLo{} to \mlCorrHi;
-$R^2=\mlRTwo$), at the noise ceiling of \techoEndCorr{} and well within its interval: a simple
-model already extracts essentially all the information that single short-run labels contain about
-the systems, and better architectures cannot show it on such labels. The replicated systems
-confirm the measurement model directly. For the same predictions, the correlation rises from
+$R^2=\mlRTwo$), statistically indistinguishable from the estimated ceiling of \techoEndCorr{}
+(95\% interval \techoEndCorrLo{} to \techoEndCorrHi). That the point estimate exceeds the ceiling
+slightly suggests that the reliability of the whole population is somewhat higher than the
+replicated subset indicates; either way, a simple model is already close to what single short-run
+labels allow, so a better architecture could hardly show an advantage on them. The replicated
+systems are consistent with the measurement model. For the same predictions, the correlation rises from
 \mlRepA{} and \mlRepB{} against either single label to \mlRepMean{} against the mean of the two,
 as the reliability of a two-run mean predicts (\mlRepMeanExp; gain 95\% interval \mlRepGainLo{}
-to \mlRepGainHi). Better labels, not better models, are what raise the measured performance.
+to \mlRepGainHi). On such labels, better labels rather than better models are what can raise the
+measured performance.
 
 Against the long runs, the model, which never saw these systems, ranks the
 \SI{50}{\nano\second} reference as well as the system's own \SI{5}{\nano\second} run among the
@@ -355,7 +369,8 @@ exceed the ceiling, so a model close to it is as good as the labels allow, and p
 measured against averaged labels. And because \techoNRep{} systems appear twice in the public
 dataset, splits should be made by system; in this dataset the effect of splitting by trajectory
 instead is small (\mlLeakTraj{} against \mlLeakSys{} on the \mlLeakN{} replicated trajectories),
-because two runs of the same system agree little more than the model does with either.
+because the model agrees with either run of a replicated system more closely than the two runs
+agree with each other (rank correlation \RepEndRho), so the partner's label adds little.
 
 
 \begin{table}[ht]
@@ -379,14 +394,19 @@ For the \nPairs{} systems simulated at both lengths, the end-point label of the
 \PairEndLo{} to \PairEndHi; \cref{si:fig:pairs}), and the Spearman correlation between them is
 \PairEndRho{} (95\% interval \PairEndRhoLo{} to \PairEndRhoHi). The correlation owes much to the wide
 range of mobilities in this subset: it is \PairEndRhoLit{} among the \nLongLit{} literature
-polymers but \PairEndRhoScreen{} among the \nLongScreen{} screening polymers. Selecting the best
-candidates is more robust than the overall correlation suggests (\cref{tab:selection}): the short
-run identifies \PairEndTopTenHits{} of the \PairEndTopTenK{} best systems and
-\PairEndTopTwentyHits{} of the \PairEndTopTwentyK{} best, against 10\% and 20\% by chance. A short
-run thus separates good from poor electrolytes but cannot resolve similar ones, in line with the noise ceiling above.
+polymers but \PairEndRhoScreen{} among the \nLongScreen{} screening polymers. In the whole
+paired set the short run identifies \PairEndTopTenHits{} of the \PairEndTopTenK{} best systems
+(\cref{tab:selection}), but these top sets consist almost entirely of literature polymers
+(\LitInTopTen{} of \PairEndTopTenK{} and \LitInTopTwenty{} of \PairEndTopTwentyK), which are easy to
+separate. Within the \ScrN{} screening polymers the short run still recovers \ScrTopTenHits{} of
+the \ScrTopTenK{} best and \ScrTopTwentyHits{} of the \ScrTopTwentyK{} best, against 10\% and 20\%
+by chance. These recalls are optimistic, because the short and long runs of a pair share their
+initial structure and only the dynamic part of the noise separates them. A short run thus
+separates good from poor electrolytes but cannot resolve similar ones, in line with the noise
+ceiling above.
 
 The median ratio of \PairEndRatio{} is larger than the \ratioFive{} obtained at the same lag from
-the origin-averaged long curves, and the ageing explains the gap. The short runs behave like the
+the origin-averaged long curves, and this slowdown explains the gap. The short runs behave like the
 first \SI{5}{\nano\second} of the long runs (median ratio \techoEndShortPrefRatio), and that
 first segment is \segEndFirstVsAll{} times faster than the average of all segments, which is
 roughly what separates a single early window from a curve averaged over all time origins. Every
@@ -397,8 +417,10 @@ extent that it differs between systems.
 \begin{table}[ht]
 \centering
 \caption{Recall of the best systems according to the \SI{50}{\nano\second} reference when they are
-selected from the \SI{5}{\nano\second} run of the same system (\nPairs{} systems). Intervals by
-bootstrap over systems; ``Random'' is the expected recall of a random selection of $k$ systems.}
+selected from the \SI{5}{\nano\second} run of the same system (\nPairs{} systems; the last rows
+only the \ScrN{} screening polymers). Intervals by bootstrap over systems; ``Random'' is the expected
+recall of a random selection of $k$ systems. All recalls are optimistic, because the two runs of a
+pair share their initial structure.}
 \label{tab:selection}
 \input{tabla_seleccion}
 \end{table}
@@ -444,8 +466,9 @@ as \SI{50}{\nano\second}.}\label{fig:frontier}
 \end{figure}
 
 \subsection{Spending the budget across candidates: adaptive allocation}\label{sec:res-allocation}
-The noise model measured above is well supported by the replicated systems: the
-differences between replicas are Gaussian (excess kurtosis \alKurt, Shapiro-Wilk $p=\alShapiroP$).
+The noise model measured above is compatible with the replicated systems: the
+differences between replicas show no departure from a Gaussian (excess kurtosis \alKurt,
+Shapiro-Wilk $p=\alShapiroP$).
 With it, how replicates are distributed matters more than how many are run (\cref{fig:allocation},
 \cref{tab:allocation}). Uniform replicates improve slowly: for the top 10\% of \alN{} candidates
 the recall rises from \alUnifTopTenBOne\% with one run to \alUnifTopTenBFour\% with four.
@@ -465,7 +488,8 @@ every candidate and spend the rest of the budget on new-structure replicates of 
 whose membership of the top set is uncertain.
 
 These gains are predictions of the noise model, since the public data contain at most two runs per
-system, but the replicated systems support them as far as they can (\cref{si:tab:val-alloc}). The
+system; the replicated systems allow only a partial check, which is consistent with them but has
+little statistical power (\cref{si:tab:val-alloc}). The
 model's probabilities of exceeding the top-10\% cut-off are informative on real runs, improving the
 Brier score of the base rate by \valAlBrierGainTen\% with a calibration slope of
 \valAlCalSlopeTen{} (95\% interval \valAlCalSlopeLoTen{} to \valAlCalSlopeHiTen). In the real
@@ -505,8 +529,8 @@ the same. The random forest reaches the ceiling for both ions (\genTfsiMl{} and 
 correlation with the mean of two replicas rises as the measurement model predicts (\genTfsiMlMean{}
 against an expected \genTfsiMlMeanExp{} for the anion), and adaptive allocation matches four
 uniform replicates with less than half the runs ($\times$\genTfsiSaving{} and
-$\times$\genLiSaving{} for the top 10\%). The numbers are specific to each property, but the
-conclusions are not.
+$\times$\genLiSaving{} for the top 10\%). The numbers are specific to each property, but for these two properties the
+conclusions are the same.
 
 \begin{table}[ht]
 \centering
@@ -541,8 +565,9 @@ Spearman \PairAvgRhoLit{} among widely different polymers \\
 \addlinespace
 Find the best candidates under a fixed budget &
 One run each, then new-structure replicates for candidates near the cut-off &
-Matches four uniform replicates with \alEqTopTenUnifFour{} runs per candidate for the top 10\%
-and \alEqTopOneUnifFour{} for the top 1\% \\
+In simulations with the measured noise, matches four uniform replicates with
+\alEqTopTenUnifFour{} runs per candidate for the top 10\% and \alEqTopOneUnifFour{} for the top
+1\%; real runs consistent but underpowered \\
 \addlinespace
 Decide between two similar candidates &
 Several new-structure runs each &
@@ -585,13 +610,14 @@ replicates per candidate would test them directly.
 % =============================================================================
 Short MD runs make useful but imperfect labels. In the largest public set of polymer electrolyte
 simulations, a \SI{5}{\nano\second} label measures an apparent, time-dependent quantity that is
-inflated by the ageing of the polymer matrix during the run, and about
+inflated by a slow decrease of lithium mobility during the run, and about
 half of its variance across candidates is run-to-run noise that comes in comparable parts from the
-initial structure and from the dynamics. This caps what any model can learn from such labels, a ceiling that a simple fingerprint model
-already reaches, and
+initial structure and from the dynamics. This caps what any model can learn from such labels, and a simple fingerprint model is already
+close to that ceiling; it also
 limits a single run to separating good from poor candidates. The same noise model shows how to
-spend a budget: one run per candidate and further runs only where the selection is uncertain find
-the best candidates as reliably as four uniform replicates at half the cost or less, whereas
+spend a budget: in simulations with the measured noise, one run per candidate and further runs only
+where the selection is uncertain find the best candidates as reliably as four uniform replicates at
+half the cost or less, a prediction that real runs support but cannot yet confirm, whereas
 stopping individual runs adaptively saves nothing. The same picture holds for the anion
 diffusivity, whose labels are less noisy. Transport coefficients in the long-time limit
 remain out of reach for most systems even with tenfold longer runs.

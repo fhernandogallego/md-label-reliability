@@ -7,16 +7,16 @@
  "techo_correlacion": 0.6861148247898908,
  "particiones": 5,
  "todas": {
-  "pearson": 0.7099855112836417,
+  "pearson": 0.7099855112836418,
   "pearson_ic95": [
-   0.6950415591690221,
+   0.6950415591690222,
    0.7243447423595125
   ],
   "r2": 0.5040018995382933,
-  "fraccion_del_techo": 1.034791095646506,
-  "correlacion_implicita_con_propiedad": 1.034791095646506,
+  "fraccion_del_techo": 1.0347910956465063,
+  "correlacion_implicita_con_propiedad": 1.0347910956465063,
   "correlacion_implicita_ic95": [
-   1.013010554584453,
+   1.0130105545844532,
    1.055719416325582
   ]
  },
@@ -27,20 +27,20 @@
    0.5243779392140605,
    0.7726508925756227
   ],
-  "pearson_B": 0.6931730678047441,
+  "pearson_B": 0.6931730678047442,
   "pearson_B_ic95": [
    0.5602212351870219,
-   0.7955392686788935
+   0.7955392686788932
   ],
-  "pearson_media": 0.7790076416095252,
+  "pearson_media": 0.7790076416095251,
   "pearson_media_ic95": [
-   0.6565671132927507,
+   0.6565671132927506,
    0.856864139774984
   ],
-  "media_esperada_por_el_modelo_de_medida": 0.7935681310761661,
+  "media_esperada_por_el_modelo_de_medida": 0.7935681310761662,
   "ganancia_media_ic95": [
-   0.06880196803220287,
-   0.13276095205481822
+   0.06880196803220265,
+   0.1327609520548181
   ]
  },
  "larga": {
@@ -59,7 +59,7 @@
   "cribado": {
    "n": 96,
    "spearman_modelo": 0.671228974498101,
-   "pearson_modelo": 0.7680821442649219,
+   "pearson_modelo": 0.7680821442649218,
    "spearman_corrida_corta": 0.6758410200759631,
    "pearson_corrida_corta": 0.716256693376996,
    "dif_spearman_modelo_menos_corta_ic95": [
@@ -82,7 +82,7 @@
  "fuga": {
   "n_trayectorias_replicadas_con_pareja_en_entrenamiento": 168,
   "pearson_division_por_trayectoria": 0.6560163876455558,
-  "pearson_division_por_sistema": 0.6808599902086936,
+  "pearson_division_por_sistema": 0.6808599902086937,
   "pearson_todas_division_por_trayectoria": 0.7101303386935501
  }
 }

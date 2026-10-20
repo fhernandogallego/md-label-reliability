@@ -154,13 +154,17 @@ with open("paper/numeros_ml.tex", "w") as fh:
     fh.write("% Generado por ml_demo.py a partir de resultados/ml_demo.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")
 
+lo1, hi1 = (float(v) for v in H["techo_correlacion_ic95"])                 # ya es una correlación (√r), no una fiabilidad
+sb = lambda r: float(np.sqrt(2 * r / (1 + r)))                             # techo de la media de dos corridas (Spearman-Brown)
+rlo, rhi = (v ** 2 for v in (lo1, hi1))
+techo1 = f"{f2(np.sqrt(r1))} ({f2(lo1)} to {f2(hi1)})"; techo2 = f"{f2(np.sqrt(r2))} ({f2(sb(rlo))} to {f2(sb(rhi))})"
 with open("paper/tabla_ml.tex", "w") as fh:
     fh.write("% Generado por ml_demo.py. No editar a mano.\n\\begin{tabular}{lrrr}\n\\toprule\n"
-             "Target of the out-of-sample prediction & Systems & Pearson $r$ (95\\% CI) & Ceiling \\\\\n\\midrule\n")
-    fh.write(f"One 5 ns label, all systems & {M['mlNSys']} & {M['mlCorr']} ({M['mlCorrLo']} to {M['mlCorrHi']}) & {f2(np.sqrt(r1))} \\\\\n")
-    fh.write(f"One 5 ns label, replicated systems & {M['mlRepN']} & {f2((R['replicados']['pearson_A'] + R['replicados']['pearson_B']) / 2)} & {f2(np.sqrt(r1))} \\\\\n")
+             "Target of the out-of-sample prediction & Systems & Pearson $r$ (95\\% CI) & Ceiling (95\\% CI) \\\\\n\\midrule\n")
+    fh.write(f"One 5 ns label, all systems & {M['mlNSys']} & {M['mlCorr']} ({M['mlCorrLo']} to {M['mlCorrHi']}) & {techo1} \\\\\n")
+    fh.write(f"One 5 ns label (first / second run), replicated systems & {M['mlRepN']} & {M['mlRepA']} / {M['mlRepB']} & {techo1} \\\\\n")
     lo, hi = R["replicados"]["pearson_media_ic95"]
-    fh.write(f"Mean of two 5 ns labels, replicated systems & {M['mlRepN']} & {M['mlRepMean']} ({f2(lo)} to {f2(hi)}) & {f2(np.sqrt(r2))} \\\\\n")
+    fh.write(f"Mean of two 5 ns labels, replicated systems & {M['mlRepN']} & {M['mlRepMean']} ({f2(lo)} to {f2(hi)}) & {techo2} \\\\\n")
     fh.write("\\bottomrule\n\\end{tabular}\n")
 
 print(f"sistemas {R['n_sistemas']} (fallos de SMILES {fallos}); techo √r = {np.sqrt(r1):.2f}")
