@@ -2,7 +2,7 @@
 
 Code and derived data for the paper *"Reliability of Short Molecular Dynamics Runs as Screening Labels:
 Noise Ceilings, Time Dependence and Adaptive Replicate Allocation"* (F. Hernando-Gallego, D. Vasilev-Vasilev,
-D. García-Santos, A. Campo-Camacho, A. Gomez-Gomez).
+D. García-Santos, A. Campo-Camacho, A. Gómez-Gómez).
 
 The analysis uses the public HTP-MD collection of polymer electrolyte simulations (Xie et al., *Nat. Commun.*
 2022, 13, 3415; *APL Mach. Learn.* 2023, 1, 046108). Raw trajectories are not redistributed here; the scripts
