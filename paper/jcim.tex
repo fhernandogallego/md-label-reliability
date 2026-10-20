@@ -264,14 +264,6 @@ despite the \SI{5}{\nano\second} equilibration that precedes production~\cite{Xi
 The effect is stronger for the screening polymers (\segEndFirstScreen) than for those taken from
 the literature (\segEndFirstLit).
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.6\textwidth]{figures/fig7_segments.pdf}
-\caption{Apparent diffusivity of consecutive \SI{5}{\nano\second} segments of the \segN{} long
-runs, each computed from its own data, relative to the segments between 25 and
-\SI{50}{\nano\second} (shaded): median over systems and 95\% bootstrap interval.}
-\label{fig:segments}
-\end{figure}
 
 \begin{figure}[ht]
 \centering
@@ -288,6 +280,15 @@ runs, each computed from its own data, relative to the segments between 25 and
 diffusivity of \Li{} relative to its value at \SI{25}{\nano\second} (median and 10th to 90th percentile band).
 Right: Spearman correlation between the rankings at lag $\tau$ and at \SI{25}{\nano\second}.}
 \label{fig:long}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{figures/fig7_segments.pdf}
+\caption{Apparent diffusivity of consecutive \SI{5}{\nano\second} segments of the \segN{} long
+runs, each computed from its own data, relative to the segments between 25 and
+\SI{50}{\nano\second} (shaded): median over systems and 95\% bootstrap interval.}
+\label{fig:segments}
 \end{figure}
 
 \subsection{Run-to-run noise and its sources}\label{sec:res-noise}
@@ -308,7 +309,7 @@ and the dynamics for the rest. Re-sampling the structure and averaging the dynam
 noise, and a replicate should start from a new structure rather than extend the same run. The noise
 also depends on mobility: it is \techoEndSdSlow{} in the slower half of the replicated systems and
 \techoEndSdFast{} in the faster half (rank correlation between the absolute difference and the
-level \techoEndHetRho, $p=\techoEndHetP$), whereas the learning model of the original study assumes
+level $\techoEndHetRho$, $p=\techoEndHetP$), whereas the learning model of the original study assumes
 noise independent of the polymer~\cite{Xie2022Accelerating}. Two candidates measured once each
 differ by a factor of \RepEndPairFactor{} from noise alone at one standard deviation and up to
 \RepEndPairFactorNinetyFive{} at the 95\% level.
@@ -356,12 +357,6 @@ dataset, splits should be made by system; in this dataset the effect of splittin
 instead is small (\mlLeakTraj{} against \mlLeakSys{} on the \mlLeakN{} replicated trajectories),
 because two runs of the same system agree little more than the model does with either.
 
-\begin{table}[ht]
-\centering
-\caption{Out-of-sample correlation of a random forest on monomer fingerprints with short-run
-labels (cross-validation split by system), against the noise ceiling of each label.}\label{tab:ml}
-\input{tabla_ml}
-\end{table}
 
 \begin{table}[ht]
 \centering
@@ -369,6 +364,13 @@ labels (cross-validation split by system), against the noise ceiling of each lab
 $n$ runs, maximum correlation of a perfect predictor with that label, and recall of the truly best
 systems when selecting by it.}\label{tab:ceiling}
 {\footnotesize\input{tabla_techo}}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Out-of-sample correlation of a random forest on monomer fingerprints with short-run
+labels (cross-validation split by system), against the noise ceiling of each label.}\label{tab:ml}
+\input{tabla_ml}
 \end{table}
 
 \subsection{Selecting candidates from one short run}\label{sec:res-selection}
@@ -452,8 +454,10 @@ and \alBoundTopTenBFour\% with four, and matches four uniform replicates with
 \alEqTopTenUnifFour{} runs per candidate, a saving of $\times$\alSavingTopTenUnifFour. The saving
 grows with the selectivity of the target: $\times$\alSavingTopFiveUnifFour{} for the top 5\% and
 $\times$\alSavingTopOneUnifFour{} for the top 1\% (\cref{si:tab:alloc-eq}). Successive halving, which re-runs the current leaders in repeated rounds, performs
-similarly: with the end-point label it is slightly better for the top 1\% at the smallest budgets,
-and with the origin-averaged label it is slightly worse at larger budgets (Supporting Information).
+similarly: with the end-point label it is better for the top 1\% at small budgets
+(\alHalvingTopOneBOneQuarterEnd\% against \alBoundTopOneBOneQuarterEnd\% with 1.25 runs per
+candidate), and with the origin-averaged label it is worse at larger budgets
+(\alHalvingTopOneBFourAvg\% against \alBoundTopOneBFourAvg\% with four).
 The gain therefore comes from adaptivity, not from a particular rule. The result holds with the empirical distribution of the
 short runs and with the origin-averaged label, and knowing that slow systems are noisier does not
 improve the allocation (Supporting Information). In practice, a campaign should give one short run to
