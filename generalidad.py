@@ -2,7 +2,8 @@
 
 Para comparar en igualdad de condiciones se usa para los dos iones el mismo estimador, el promediado en orígenes a T/2
 (D_medio para el Li, D_tfsi_medio para el TFSI; el end-point del TFSI no está en los datos distribuidos). Para cada ion:
-  - ruido de una corrida (94 sistemas replicados), fiabilidad r con intervalo bootstrap por sistemas y techo √r;
+  - ruido de una corrida (94 sistemas replicados), fiabilidad r con intervalo bootstrap por sistemas y techo √r
+    (comun.fiabilidad_bootstrap: la misma función y semilla que incertidumbre.py);
   - dependencia del ruido con la movilidad (mitad lenta frente a rápida);
   - selección: Spearman de la corrida corta con la referencia de 50 ns (cribado y literatura);
   - aprendizaje automático: random forest con huellas Morgan del monómero, validación cruzada dividida por sistema;
@@ -20,6 +21,7 @@ from rdkit import Chem, RDLogger
 from rdkit.Chem import rdFingerprintGenerator
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
+from comun import fiabilidad_bootstrap
 
 RDLogger.DisableLog("rdApp.*")
 N_BOOT, N_MC, N_PART, SEMILLA, TOP, TANDA = 2000, 100, 5, 20261019, 0.10, 0.05
@@ -76,11 +78,9 @@ for ion, col in ETIQUETAS.items():
     e = {}
     a = np.log(rep[rep.original].set_index("sistema")[col]); b = np.log(rep[~rep.original].set_index("sistema")[col])
     s2 = [s for s in a.index if s in b.index]; xa, xb = a[s2].values, b[s2].values; todas = np.log(cortas[col].values)
-    def fiab(x, y, t): sr = (x - y).std(ddof=1) / np.sqrt(2); return sr, 1 - sr ** 2 / t.var(ddof=1)
-    sr, r = fiab(xa, xb, todas); bs = []
-    for _ in range(N_BOOT):
-        i = rng.integers(0, len(xa), len(xa)); j = rng.integers(0, len(todas), len(todas)); bs.append(fiab(xa[i], xb[i], todas[j])[1])
-    e.update({"sd_run": float(sr), "fiabilidad": float(r), "fiabilidad_ic95": ic(bs), "techo": float(np.sqrt(r)),
+    F = fiabilidad_bootstrap(a[s2], b[s2], todas)                      # la misma función que incertidumbre.py: mismo IC para el Li
+    sr, r = F["sd_run"], F["fiabilidad"]
+    e.update({"sd_run": float(sr), "fiabilidad": float(r), "fiabilidad_ic95": F["fiabilidad_ic95"], "techo": float(np.sqrt(r)),
               "fiabilidad_2rep": float(2 * r / (1 + r))})
     nivel = (xa + xb) / 2; mitad = nivel < np.median(nivel)
     e["sd_lentos"] = float((xa - xb)[mitad].std(ddof=1) / np.sqrt(2)); e["sd_rapidos"] = float((xa - xb)[~mitad].std(ddof=1) / np.sqrt(2))

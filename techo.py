@@ -14,7 +14,10 @@ Todo en escala logarítmica, ln D. Modelo de medida: etiqueta = valor del sistem
   - Recall máximo: simulación gaussiana con la varianza entre sistemas y el ruido medidos; proporción del verdadero top-k
     que recupera la selección por la media de n corridas de 5 ns (equivale al recall aparente de un modelo perfecto
     evaluado contra esas etiquetas).
-Intervalos: bootstrap por sistemas (réplicas, conjunto de cortas y pares remuestreados de forma independiente).
+Intervalos: bootstrap por sistemas (réplicas, conjunto de cortas y pares remuestreados de forma independiente). σ_din sale de los 96
+pares de cribado y σ_run de las 94 réplicas; como la corta de cada par ES la réplica original, se repite la separación en
+los 92 sistemas que tienen las dos cosas con un bootstrap conjunto por sistema, y se comprueba el efecto de tanda
+(originales 20200623, réplicas 20200824, largas 20200714): desplazamiento medio y dispersión de cada tanda.
 Uso: python techo.py → resultados/techo.json, paper/tabla_techo.tex, paper/numeros_techo.tex
 """
 import glob, json
@@ -97,6 +100,57 @@ for col, col_par, col_pref in (("D_extremos", "D5_extremos", "pref_extremos"), (
             e["recall"][f"{n}rep_top{round(100 * frac)}"] = fila
     R[col] = e
 
+
+# ---------- Separación estructura/dinámica: bootstrap conjunto y efecto de tanda ----------
+# La corrida de 5 ns de cada par de cribado ES la réplica original, así que A − B y corta − prefijo comparten una corrida y
+# están correlacionadas: aquí se remuestrean juntas, por sistema, en los sistemas que tienen las dos cosas. Las tandas no se
+# pueden separar del diseño (originales y cortas de cribado: 20200623; réplicas: 20200824; largas: 20200714), así que se
+# comprueba si alguna se desplaza o cambia de dispersión. σ_run y σ_din usan la desviación típica de las diferencias, que no
+# incluye un desplazamiento constante entre tandas; se da también la cuenta sin descontarlo. Generador aparte (semilla común,
+# comun.py) para no alterar los números aleatorios de lo anterior.
+from comun import SEMILLA_BOOT, ic as ic_comun
+tandas = {"originales": sorted(rep.groupby("sistema").tanda.first().unique().tolist()),
+          "replicas": sorted(rep.groupby("sistema").tanda.last().unique().tolist()),
+          "cortas_cribado": sorted(cortas.groupby("sistema").first().loc[cribado.index].tanda.unique().tolist()),
+          "largas": sorted(T[T.ns == 50].tanda.unique().tolist())}
+R["tandas"] = {k: [str(v) for v in vs] for k, vs in tandas.items()}
+rng2 = np.random.default_rng(SEMILLA_BOOT)
+
+
+def separacion(dr, dd):
+    """dr: A − B (réplicas); dd: corta − prefijo (mismo sistema); devuelve σ_run, σ_din y fracción de estructura."""
+    sr2 = dr.var(ddof=1) / 2; sd2 = dd.var(ddof=1) / 2
+    return {"sd_run": np.sqrt(sr2), "sd_dinamica": np.sqrt(sd2), "frac_var_estructura": max(sr2 - sd2, 0) / sr2}
+
+
+for col, col_par, col_pref in (("D_extremos", "D5_extremos", "pref_extremos"), ("D_medio", "D5_medio", "pref_medio")):
+    g = rep.groupby("sistema")[col]; xa = np.log(g.first()); xb = np.log(g.last())
+    c = cribado.dropna(subset=[col_pref]); dd_all = np.log(c[col_par]) - np.log(c[col_pref])
+    comunes = sorted(set(xa.index) & set(c.index))
+    assert (rep.groupby("sistema").id.first()[comunes].values == cortas[cortas.sistema.isin(comunes)].groupby("sistema").id.first()[comunes].values).all()
+    dr = (xa - xb)[comunes].to_numpy(); dd = dd_all[comunes].to_numpy()
+    m = separacion(dr, dd); boot = {k: [] for k in m}
+    for _ in range(N_BOOT):
+        i = rng2.integers(0, len(dr), len(dr))
+        for k, v in separacion(dr[i], dd[i]).items(): boot[k].append(v)
+    J = {"n": len(comunes), "n_pares_dinamica": len(c), "n_replicas": len(xa), "corr_diferencias": float(np.corrcoef(dr, dd)[0, 1]), **{k: float(v) for k, v in m.items()},
+         **{f"{k}_ic95": ic_comun(boot[k]) for k in m}}
+    # efecto de tanda: desplazamiento medio (como razón de D) y dispersión entre sistemas de cada tanda
+    dA = (xa - xb).to_numpy(); bm = [dA[rng2.integers(0, len(dA), len(dA))].mean() for _ in range(N_BOOT)]
+    bp = [dd_all.to_numpy()[rng2.integers(0, len(dd_all), len(dd_all))].mean() for _ in range(N_BOOT)]
+    sin_rep = np.log(cortas[(~cortas.literatura) & (~cortas.sistema.isin(xa.index))][col])
+    L5 = {"razon_original_replica": float(np.exp(dA.mean())), "razon_original_replica_ic95": [float(np.exp(v)) for v in ic_comun(bm)],
+          "p_desplazamiento_replicas": float(stats.ttest_1samp(dA, 0).pvalue),
+          "razon_corta_prefijo_media": float(np.exp(dd_all.mean())), "razon_corta_prefijo_ic95": [float(np.exp(v)) for v in ic_comun(bp)],
+          "p_desplazamiento_prefijo": float(stats.ttest_1samp(dd_all, 0).pvalue),
+          "sd_entre_sistemas_originales": float(xa.std(ddof=1)), "sd_entre_sistemas_replicas": float(xb.std(ddof=1)),
+          "p_levene_original_replica": float(stats.levene(xa, xb).pvalue),
+          "sd_cribado_no_replicado": float(sin_rep.std(ddof=1)),
+          # sin descontar el desplazamiento medio entre tandas (diferencias sin centrar)
+          "sd_run_sin_centrar": float(np.sqrt(np.mean(dA ** 2) / 2)),
+          "fiabilidad_sin_centrar": float(1 - np.mean(dA ** 2) / 2 / np.log(cortas[col]).var(ddof=1))}
+    R[col]["separacion_conjunta"] = J; R[col]["tandas"] = L5
+
 json.dump(R, open("resultados/techo.json", "w"), indent=1)
 
 f2 = lambda v: f"{v:.2f}"
@@ -132,6 +186,17 @@ for col, nom in (("D_extremos", "End"), ("D_medio", "Avg")):
         for t, tn in ((5, "Five"), (10, "Ten"), (20, "Twenty")):
             M[f"techo{nom}Recall{nn}Top{tn}"] = f"{100 * e['recall'][f'{n}rep_top{t}']['punto']:.0f}"
     lo, hi = e["recall"]["1rep_top10"]["ic95"]; M[f"techo{nom}RecallOneTopTenLo"] = f"{100 * lo:.0f}"; M[f"techo{nom}RecallOneTopTenHi"] = f"{100 * hi:.0f}"
+    J, L5 = e["separacion_conjunta"], e["tandas"]
+    M[f"techo{nom}DynN"] = str(J["n_pares_dinamica"]); M[f"techo{nom}JointN"] = str(J["n"]); M[f"techo{nom}JointDiffCorr"] = f2(J["corr_diferencias"])
+    M[f"techo{nom}JointFracStructPct"] = f"{100 * J['frac_var_estructura']:.0f}"
+    M[f"techo{nom}JointFracStructLo"], M[f"techo{nom}JointFracStructHi"] = (f"{100 * v:.0f}" for v in J["frac_var_estructura_ic95"])
+    M[f"techo{nom}BatchRepRatio"] = f2(L5["razon_original_replica"]); M[f"techo{nom}BatchRepP"] = f2(L5["p_desplazamiento_replicas"])
+    M[f"techo{nom}BatchRepRatioLo"], M[f"techo{nom}BatchRepRatioHi"] = (f2(v) for v in L5["razon_original_replica_ic95"])
+    M[f"techo{nom}BatchPrefRatio"] = f2(L5["razon_corta_prefijo_media"]); M[f"techo{nom}BatchPrefP"] = f2(L5["p_desplazamiento_prefijo"])
+    M[f"techo{nom}BatchPrefRatioLo"], M[f"techo{nom}BatchPrefRatioHi"] = (f2(v) for v in L5["razon_corta_prefijo_ic95"])
+    M[f"techo{nom}BatchSdOrig"] = f2(L5["sd_entre_sistemas_originales"]); M[f"techo{nom}BatchSdRep"] = f2(L5["sd_entre_sistemas_replicas"])
+    M[f"techo{nom}BatchSdOther"] = f2(L5["sd_cribado_no_replicado"]); M[f"techo{nom}BatchLeveneP"] = f2(L5["p_levene_original_replica"])
+    M[f"techo{nom}RelUncentred"] = f2(L5["fiabilidad_sin_centrar"])
 with open("paper/numeros_techo.tex", "w") as fh:
     fh.write("% Generado por techo.py a partir de resultados/techo.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")

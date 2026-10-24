@@ -2,7 +2,8 @@
 
 Code and derived data for the paper *"Reliability of Short Molecular Dynamics Runs as Screening Labels:
 Noise Ceilings, Time Dependence and Adaptive Replicate Allocation"* (F. Hernando-Gallego, D. Vasilev-Vasilev,
-D. García-Santos, A. Campo-Camacho, A. Gómez-Gómez).
+D. García-Santos, A. Campo-Camacho, A. Gómez-Gómez). Preprint: ChemRxiv,
+https://doi.org/10.26434/chemrxiv.15010895/v1.
 
 The analysis uses the public HTP-MD collection of polymer electrolyte simulations (Xie et al., *Nat. Commun.*
 2022, 13, 3415; *APL Mach. Learn.* 2023, 1, 046108). Raw trajectories are not redistributed here; the scripts
@@ -18,9 +19,11 @@ download what they need from the HTP-MD platform.
 
 Main scripts: `analizar_curvas.py` (regime and lag dependence), `incertidumbre.py` and `techo.py` (reliability,
 noise ceiling, noise sources), `analizar_prefijos.py`, `referencias.py` and `frontera.py` (truncated
-trajectories, stopping rules, cost-error frontier), `segmentos.py` (ageing within runs), `asignacion.py` and
+trajectories, stopping rules, cost-error frontier), `segmentos.py` (ageing within runs), `ralentizacion.py` (what slows down with the lithium: anion, polymer
+and energy relaxation), `asignacion.py` and
 `validacion_asignacion.py` (adaptive replicate allocation and its check on real runs), `ml_demo.py`
-(random forest against the noise ceiling), `generalidad.py` (the same analyses for the anion diffusivity). Script comments are in Spanish.
+(random forest against the noise ceiling), `generalidad.py` (the same analyses for the anion diffusivity), `toc.py` (table-of-contents graphic);
+`comun.py` holds the shared random seed. Script comments are in Spanish.
 
 ## Reproducing the results
 

@@ -5,40 +5,28 @@ Lee resultados/tabla_por_trayectoria.csv (generada por analizar_curvas.py), así
     corridas cortas) y el ICC(1) estimado solo dentro del subconjunto replicado, ambos con intervalo bootstrap por sistemas.
   - Escala de error para comparar DOS candidatos: la diferencia de dos corridas tiene desviación √2·σ_run.
   - Selección: recall/precisión del k mejor según la corrida corta frente a la larga, para varios k, con intervalos
-    bootstrap por sistemas y la línea base de una selección aleatoria.
+    bootstrap por sistemas (con reemplazo; la selección es por posiciones) y la línea base de una selección aleatoria.
+  Semilla y fiabilidad comunes en comun.py.
 Uso: python incertidumbre.py → resultados/incertidumbre.json y paper/tabla_seleccion.tex
 """
 import json
 import numpy as np
 import pandas as pd
 from scipy import stats
+from comun import N_BOOT, SEMILLA_BOOT as SEMILLA, ic, fiabilidad_bootstrap, recall_top
 
-N_BOOT, SEMILLA = 2000, 20261014
 rng = np.random.default_rng(SEMILLA)
 T = pd.read_csv("resultados/tabla_por_trayectoria.csv")
 cortas = T[T.ns == 5].sort_values("id")
-ic = lambda b: [float(np.quantile(b, .025)), float(np.quantile(b, .975))]
 R = {"n_boot": N_BOOT, "semilla": SEMILLA}
 
 # ---------- Réplicas: ruido, fiabilidad e ICC ----------
 rep = cortas.groupby("sistema").filter(lambda g: len(g) == 2).sort_values(["sistema", "id"])
 R["replicas"] = {"n_sistemas": int(rep.sistema.nunique())}
 for col in ("D_extremos", "D_medio"):
-    x = np.log(rep.groupby("sistema")[col].first().values); y = np.log(rep.groupby("sistema")[col].last().values)
-    todas = np.log(cortas[col].values)
-
-    def medidas(x, y, todas):
-        sd_run = (x - y).std(ddof=1) / np.sqrt(2)
-        msb = 2 * np.var((x + y) / 2, ddof=1); msw = np.sum((x - y) ** 2) / (2 * len(x))    # ANOVA de una vía con 2 réplicas
-        return {"sd_run": sd_run, "fiabilidad": 1 - sd_run ** 2 / todas.std(ddof=1) ** 2, "icc1_subconjunto": (msb - msw) / (msb + msw)}
-
-    m = medidas(x, y, todas); boot = {k: [] for k in m}
-    for _ in range(N_BOOT):
-        i = rng.integers(0, len(x), len(x)); j = rng.integers(0, len(todas), len(todas))
-        for k, v in medidas(x[i], y[i], todas[j]).items(): boot[k].append(v)
-    R["replicas"][col] = {k: float(v) for k, v in m.items()}
-    R["replicas"][col].update({f"{k}_ic95": ic(boot[k]) for k in m})
-    s2 = np.sqrt(2) * m["sd_run"]                                  # diferencia entre dos candidatos medidos con una corrida cada uno
+    g = rep.groupby("sistema")[col]                                    # comun.fiabilidad_bootstrap: misma cifra e IC en todo el texto
+    R["replicas"][col] = fiabilidad_bootstrap(np.log(g.first()), np.log(g.last()), np.log(cortas[col].values))
+    s2 = np.sqrt(2) * R["replicas"][col]["sd_run"]                                  # diferencia entre dos candidatos medidos con una corrida cada uno
     R["replicas"][col].update({"factor_diferencia_1sd": float(np.exp(s2)), "factor_diferencia_95": float(np.exp(1.96 * s2))})
 
 # ---------- Pares corto/largo: correlación y selección ----------
@@ -48,12 +36,9 @@ P = a.join(b, how="inner"); n = len(P)
 R["pares"] = {"n": n, "n_cribado": int((~P.literatura).sum()), "n_literatura": int(P.literatura.sum())}
 
 
-def seleccion(P, col, frac):
-    k = max(1, round(frac * len(P)))
-    mejores = set(P.D50.nlargest(k).index); elegidos = P[col].nlargest(k).index
-    aciertos = len(mejores & set(elegidos))
-    return {"k": k, "aciertos": aciertos, "recall": aciertos / k,
-            "azar": k / len(P)}                                                 # recall esperado eligiendo k al azar
+def seleccion(Q, col, frac):
+    """Recall del top-k de la corrida larga eligiendo por la corta; por posiciones (admite sistemas repetidos)."""
+    return recall_top(Q[col].to_numpy(), Q.D50.to_numpy(), frac)
 
 
 for col in ("D5_extremos", "D5_medio"):
@@ -66,8 +51,8 @@ for col in ("D5_extremos", "D5_medio"):
         e[f"spearman_{sub}"] = float(stats.spearmanr(Q[col], Q.D50)[0])
     for frac in (0.05, 0.10, 0.20):
         s = seleccion(P, col, frac); br = []
-        for _ in range(N_BOOT):                                         # bootstrap por sistemas (sin duplicados para no crear empates)
-            Q = P.iloc[np.unique(rng.integers(0, n, n))]; br.append(seleccion(Q, col, frac)["recall"])
+        for _ in range(N_BOOT):                                         # bootstrap por sistemas, con reemplazo
+            Q = P.iloc[rng.integers(0, n, n)]; br.append(seleccion(Q, col, frac)["recall"])
         s["recall_ic95"] = ic(br)
         e[f"top{round(100 * frac)}"] = s
     R["pares"][col] = e
@@ -79,7 +64,7 @@ for frac in (0.05, 0.10, 0.20):
     kk = max(1, round(frac * n)); R["pares"]["cribado"][f"literatura_en_top{round(100 * frac)}_de_todos"] = int(P.loc[P.D50.nlargest(kk).index, "literatura"].sum())
     s = seleccion(S, "D5_extremos", frac); br = []
     for _ in range(N_BOOT):
-        Q = S.iloc[np.unique(rng.integers(0, nS, nS))]; br.append(seleccion(Q, "D5_extremos", frac)["recall"])
+        Q = S.iloc[rng.integers(0, nS, nS)]; br.append(seleccion(Q, "D5_extremos", frac)["recall"])
     s["recall_ic95"] = ic(br); R["pares"]["cribado"][f"top{round(100 * frac)}"] = s
 json.dump(R, open("resultados/incertidumbre.json", "w"), indent=1)
 

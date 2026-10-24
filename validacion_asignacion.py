@@ -21,7 +21,8 @@ import numpy as np
 import pandas as pd
 from scipy import optimize, stats
 
-N_BOOT, N_AZAR, LOTE, SEMILLA = 2000, 2000, 5, 20261016
+N_AZAR, LOTE = 2000, 5
+from comun import N_BOOT, SEMILLA_BOOT as SEMILLA, top_k                # semilla común a todos los bootstrap
 TOPS = (0.10, 0.20)
 T = pd.read_csv("resultados/tabla_por_trayectoria.csv")
 cortas = T[T.ns == 5].sort_values("id")
@@ -126,14 +127,15 @@ for top in TOPS:
          "frontera": recall(seleccion(usa_f, k), k),
          "azar": float(np.mean([recall(seleccion(np.isin(np.arange(n), rng.choice(n, extra, replace=False)), k), k) for _ in range(N_AZAR)])),
          "A_y_B_todos": recall(seleccion(np.ones(n, bool), k), k)}
-    # bootstrap por sistemas (sin duplicados) de la diferencia frontera − azar
+    # bootstrap por sistemas, con reemplazo, de la diferencia frontera − azar. Por posiciones y con orden estable (top_k):
+    # las copias de un sistema tienen valores idénticos y se ordenan igual en la referencia y en la selección
     difs = []
     for _ in range(N_BOOT):
-        idx = np.unique(rng.integers(0, n, n)); kk = max(1, round(top * len(idx)))
-        r_ = ref[idx]; verdad = set(np.argsort(-r_)[:kk])
+        idx = rng.integers(0, n, n); kk = max(1, round(top * len(idx)))
+        r_ = ref[idx]; verdad = set(top_k(r_, kk))
         def sel_sub(usa):
             suma = ya[idx] + np.where(usa, yb[idx], 0); nn = 1 + usa.astype(float)
-            m, _, _ = posterior(suma, nn, P, centro); return set(np.argsort(-m)[:kk])
+            m, _, _ = posterior(suma, nn, P, centro); return set(top_k(m, kk))
         usa_az = np.zeros(len(idx), bool); usa_az[rng.choice(len(idx), int(usa_f[idx].sum()), replace=False)] = True
         difs.append((len(verdad & sel_sub(usa_f[idx])) - len(verdad & sel_sub(usa_az))) / kk)
     e["dif_frontera_azar_ic95"] = [float(np.quantile(difs, .025)), float(np.quantile(difs, .975))]

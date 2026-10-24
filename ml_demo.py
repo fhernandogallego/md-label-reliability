@@ -13,6 +13,8 @@ Preguntas:
      sistema? (Xie et al. 2022 afirman que el modelo supera a una simulación individual.) Se separan cribado y literatura.
   4. Fuga: la misma validación dividiendo por TRAYECTORIA (las dos réplicas de un sistema pueden caer una en entrenamiento y
      otra en prueba); se compara, en las réplicas, la correlación con su propia etiqueta frente a la división por sistema.
+  5. Sensibilidad a la química: validación cruzada por familias de monómeros (Butina sobre Tanimoto, dos cortes), para ver
+     si la correlación sigue cerca del techo cuando el modelo no ha visto monómeros parecidos.
 Intervalos: bootstrap por sistemas (2000 remuestreos). Necesita rdkit y scikit-learn (entorno .venv del proyecto).
 Uso: .venv/bin/python ml_demo.py → resultados/ml_demo.json, paper/numeros_ml.tex, paper/tabla_ml.tex
 """
@@ -20,10 +22,11 @@ import json
 import numpy as np
 import pandas as pd
 from scipy import stats
-from rdkit import Chem, RDLogger
+from rdkit import Chem, DataStructs, RDLogger
+from rdkit.ML.Cluster import Butina
 from rdkit.Chem import rdFingerprintGenerator
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import KFold
+from sklearn.model_selection import GroupKFold, KFold
 
 RDLogger.DisableLog("rdApp.*")
 N_PART, N_BOOT, SEMILLA, N_BITS = 5, 2000, 20261019, 2048
@@ -130,6 +133,47 @@ R["fuga"] = {"n_trayectorias_replicadas_con_pareja_en_entrenamiento": int(sel.su
              "pearson_division_por_trayectoria": float(np.corrcoef(pred_t[sel], yt[sel])[0, 1]),
              "pearson_division_por_sistema": float(np.corrcoef(pred_sis_por_tray[sel], yt[sel])[0, 1]),
              "pearson_todas_division_por_trayectoria": float(np.corrcoef(pred_t, yt)[0, 1])}
+
+# ---------- 5) Sensibilidad: validación cruzada por familias químicas ----------
+# Con la división por sistema, un monómero de prueba suele tener en entrenamiento un vecino muy parecido. Aquí los monómeros
+# se agrupan por similitud (Butina sobre la distancia de Tanimoto de la huella Morgan binaria, radio 2, 2048 bits) y cada
+# familia entera cae en un solo pliego (GroupKFold, pliegos de tamaño equilibrado). Dos cortes: familias finas y gruesas.
+# Va al final para no alterar los números aleatorios de lo anterior.
+fps = [gen.GetFingerprint(Chem.MolFromSmiles(s)) for s in sis.mol_smiles]
+SIM = np.stack([np.asarray(DataStructs.BulkTanimotoSimilarity(f, fps), np.float32) for f in fps])
+
+
+def vecino_en_entrenamiento(pliego):
+    """Mediana, sobre los sistemas, de la mayor similitud de Tanimoto con un monómero de los pliegos de entrenamiento."""
+    return float(np.median([SIM[i, pliego != pliego[i]].max() for i in range(len(pliego))]))
+
+
+def pliegos(divisor, grupos):
+    p = np.empty(len(grupos), int)
+    for k, (_, te) in enumerate(divisor.split(np.zeros(len(grupos)), groups=grupos)): p[te] = k
+    return p
+
+
+p_sis = np.empty(len(y), int)
+for k, (_, te) in enumerate(KFold(N_PART, shuffle=True, random_state=SEMILLA).split(y)): p_sis[te] = k
+R["familias"] = {"vecino_division_por_sistema": vecino_en_entrenamiento(p_sis)}
+s3c = [s for s, l in zip(s3, lit) if not l]
+for nombre, corte in (("finas", 0.4), ("gruesas", 0.6)):
+    d = [1 - float(SIM[i, j]) for i in range(1, len(fps)) for j in range(i)]
+    grupos = np.empty(len(fps), int)
+    for g, miembros in enumerate(Butina.ClusterData(d, len(fps), corte, isDistData=True, reordering=True)): grupos[list(miembros)] = g
+    del d
+    pl = pliegos(GroupKFold(N_PART, shuffle=True, random_state=SEMILLA), grupos)
+    pf = np.empty(len(y))
+    for k in range(N_PART): pf[pl == k] = modelo().fit(X[pl != k], y[pl != k]).predict(X[pl == k])
+    pf = pd.Series(pf, index=sis.index)
+    cf, cif = r_ic(pf.values, y); tam = np.bincount(grupos)
+    R["familias"][nombre] = {"distancia_corte": corte, "similitud_corte": 1 - corte, "n_grupos": int(len(tam)),
+                             "mayor_grupo_frac": float(tam.max() / len(y)), "unitarios": int((tam == 1).sum()),
+                             "pearson": cf, "pearson_ic95": cif, "fraccion_del_techo": cf / np.sqrt(r1),
+                             "vecino_en_entrenamiento": vecino_en_entrenamiento(pl),
+                             "spearman_larga_cribado": float(stats.spearmanr(pf[s3c].values, np.log(L.loc[s3c, "D_medio"].values))[0])}
+
 json.dump(R, open("resultados/ml_demo.json", "w"), indent=1, default=float)
 
 # ---------- Macros y tabla ----------
@@ -150,6 +194,14 @@ for nombre, nn in (("todos", "All"), ("cribado", "Screen"), ("literatura", "Lit"
 F = R["fuga"]
 M.update({"mlLeakN": str(F["n_trayectorias_replicadas_con_pareja_en_entrenamiento"]), "mlLeakTraj": f2(F["pearson_division_por_trayectoria"]),
           "mlLeakSys": f2(F["pearson_division_por_sistema"])})
+Fm = R["familias"]; M["mlNNSys"] = f2(Fm["vecino_division_por_sistema"])
+for nombre, nn in (("finas", "Fine"), ("gruesas", "Coarse")):
+    e = Fm[nombre]
+    M.update({f"mlFam{nn}Sim": f"{e['similitud_corte']:.1f}", f"mlFam{nn}Groups": f"{e['n_grupos']:,}".replace(",", "{,}"),
+              f"mlFam{nn}LargestPct": f"{100 * e['mayor_grupo_frac']:.0f}", f"mlFam{nn}Corr": f2(e["pearson"]),
+              f"mlFam{nn}CorrLo": f2(e["pearson_ic95"][0]), f"mlFam{nn}CorrHi": f2(e["pearson_ic95"][1]),
+              f"mlFam{nn}FracCeilPct": f"{100 * e['fraccion_del_techo']:.0f}", f"mlFam{nn}NN": f2(e["vecino_en_entrenamiento"]),
+              f"mlFam{nn}LongScreen": f2(e["spearman_larga_cribado"])})
 with open("paper/numeros_ml.tex", "w") as fh:
     fh.write("% Generado por ml_demo.py a partir de resultados/ml_demo.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")
@@ -162,6 +214,9 @@ with open("paper/tabla_ml.tex", "w") as fh:
     fh.write("% Generado por ml_demo.py. No editar a mano.\n\\begin{tabular}{lrrr}\n\\toprule\n"
              "Target of the out-of-sample prediction & Systems & Pearson $r$ (95\\% CI) & Ceiling (95\\% CI) \\\\\n\\midrule\n")
     fh.write(f"One 5 ns label, all systems & {M['mlNSys']} & {M['mlCorr']} ({M['mlCorrLo']} to {M['mlCorrHi']}) & {techo1} \\\\\n")
+    for nn, txt in (("Fine", "fine"), ("Coarse", "coarse")):
+        fh.write(f"\\quad split by {txt} chemical family (Tanimoto $\\geq$ {M[f'mlFam{nn}Sim']}) & {M['mlNSys']} & {M[f'mlFam{nn}Corr']} "
+                 f"({M[f'mlFam{nn}CorrLo']} to {M[f'mlFam{nn}CorrHi']}) & {techo1} \\\\\n")
     fh.write(f"One 5 ns label (first / second run), replicated systems & {M['mlRepN']} & {M['mlRepA']} / {M['mlRepB']} & {techo1} \\\\\n")
     lo, hi = R["replicados"]["pearson_media_ic95"]
     fh.write(f"Mean of two 5 ns labels, replicated systems & {M['mlRepN']} & {M['mlRepMean']} ({f2(lo)} to {f2(hi)}) & {techo2} \\\\\n")
@@ -177,6 +232,12 @@ for nombre in ("todos", "cribado", "literatura"):
     e = R["larga"][nombre]
     print(f"3) larga {nombre} (n={e['n']}): Spearman modelo {e['spearman_modelo']:.2f} | corrida corta {e['spearman_corrida_corta']:.2f}; "
           f"modelo − corta IC95 {[round(v, 2) for v in e['dif_spearman_modelo_menos_corta_ic95']]}")
+for nombre in ("finas", "gruesas"):
+    e = R["familias"][nombre]
+    print(f"5) familias {nombre} (Tanimoto ≥ {e['similitud_corte']:.1f}): {e['n_grupos']} grupos, mayor {100 * e['mayor_grupo_frac']:.0f} %; "
+          f"Pearson {e['pearson']:.2f} {[round(v, 2) for v in e['pearson_ic95']]} ({100 * e['fraccion_del_techo']:.0f} % del techo); "
+          f"vecino en entrenamiento {e['vecino_en_entrenamiento']:.2f} (por sistema {R['familias']['vecino_division_por_sistema']:.2f}); "
+          f"Spearman larga cribado {e['spearman_larga_cribado']:.2f}")
 print(f"4) fuga (n={F['n_trayectorias_replicadas_con_pareja_en_entrenamiento']} trayectorias replicadas con su pareja en entrenamiento): "
       f"división por trayectoria {F['pearson_division_por_trayectoria']:.2f} | por sistema {F['pearson_division_por_sistema']:.2f}; "
       f"todas por trayectoria {F['pearson_todas_division_por_trayectoria']:.2f}")

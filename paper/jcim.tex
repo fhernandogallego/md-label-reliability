@@ -33,19 +33,22 @@ uncertainty quantification, budget allocation}
 
 \begin{document}
 
-% Gráfico para la tabla de contenidos (obligatorio en JCIM, 8,25 cm x 4,45 cm): pendiente de diseñar
-% antes del envío a la revista; no se incluye en el preprint.
+\begin{tocentry}
+\centering
+\includegraphics[width=8.25cm]{figures/toc.pdf}
+\end{tocentry}
 
 \begin{abstract}
-High-throughput molecular dynamics (MD) produces the labels on which electrolyte screening and
-machine-learning models are built, but each label comes from one short, noisy run whose value
-still depends on the simulated time. We quantify their reliability, and how to spend a
-simulation budget given it, on HTP-MD, the largest public set of polymer
+High-throughput molecular dynamics (MD) supplies labels for electrolyte screening and
+machine-learning models. Each label, however, comes from one short, noisy run and can depend on
+the simulated time. We assess label reliability and simulation-budget allocation using HTP-MD,
+the largest public set of polymer
 electrolyte trajectories (\nShort{} runs of \SI{5}{\nano\second} and \nLong{} of
-\SI{50}{\nano\second}). Lithium motion is diffusive in only \betaShortDiffN{} short and
-\betaLongDiffN{} long runs, the apparent diffusivity at a \SI{5}{\nano\second} lag is
+\SI{50}{\nano\second}). Only \betaShortDiffN{} short and \betaLongDiffN{} long runs meet an
+operational criterion for diffusive lithium motion, the apparent diffusivity at a \SI{5}{\nano\second} lag is
 \ratioFive{} times that at \SI{25}{\nano\second}, and the first \SI{5}{\nano\second} of a run
-are \segEndFirst{} times faster than its second half, biasing every short label upwards. From \nRep{} systems simulated twice, a single
+are \segEndFirst{} times faster than its second half, while the polymer is still relaxing,
+systematically biasing short labels upwards. From \nRep{} systems simulated twice, a single
 \SI{5}{\nano\second} end-point label has reliability \RepEndIcc{} (95\% CI \RepEndIccLo{} to
 \RepEndIccHi): no model can correlate with such labels much beyond about \techoEndCorr, a
 random forest on monomer fingerprints is indistinguishable from that ceiling (\mlCorr), and
@@ -81,7 +84,9 @@ dataset's authors addressed both defects by training a multi-task graph network 
 few long runs, assuming noise independent of the polymer~\cite{Xie2022Accelerating}. Learning from
 noisy labels is well studied in machine learning~\cite{Frenay2014LabelNoise}, and the statistics
 of diffusion estimates from finite trajectories are well
-understood~\cite{He2018Variances,Bullerjahn2020Optimal,McCluskey2025Accurate}. That measurement
+understood~\cite{He2018Variances,Bullerjahn2020Optimal,McCluskey2025Accurate,McCluskey2024kinisi},
+as are best practices for quantifying the sampling uncertainty of MD
+observables~\cite{Grossfield2018BestPractices}. That measurement
 noise bounds the performance any model can show is also established: for experimental activity
 data, the replicate variability sets the maximum correlation or $R^2$ a model can
 reach~\cite{Brown2009Skepticism,Kramer2012Ki}, and computational neuroscience estimates the same
@@ -101,24 +106,28 @@ be truncated to emulate shorter runs. Our contributions are:
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item \textbf{Time dependence of the labels.} A census of all \nTotal{} trajectories, the
         lag dependence of the apparent diffusivity in the long runs, and a slow decrease of lithium
-        mobility within each run that makes its beginning faster than its later part.
+        mobility within each run that makes its beginning faster than its later part and follows
+        an incomplete relaxation of the polymer.
   \item \textbf{Reliability and noise ceiling.} The run-to-run noise of a short label, its
         structural and dynamic sources and its dependence on mobility, the ceiling it imposes on
-        any predictor trained or evaluated on such labels, a machine-learning model that reaches
-        that ceiling, and the ability of one short run to select the best candidates, checked on a
+        the performance that any predictor can show against such labels, a machine-learning model
+        that comes close to that ceiling, and the ability of one short run to select the best candidates, checked on a
         second property, the anion diffusivity.
   \item \textbf{Spending the budget.} An evaluation of estimators and stopping rules on truncated
-        trajectories, and an adaptive allocation of replicates that concentrates simulation on
-        the candidates near the selection cut-off.
+        trajectories, and an evaluation, with the measured noise, of known adaptive strategies that
+        concentrate replicates on the candidates near the selection cut-off.
   \item \textbf{A decision guide and reproducible code} for each screening purpose.
 \end{enumerate}
+None of the statistical tools is new; the contribution is to measure, on a real screening
+campaign, the quantities they need and to turn them into decisions about how to run and use the
+simulations.
 
 % =============================================================================
 \section{Methods}\label{sec:methods}
 % =============================================================================
 \subsection{Data set}\label{sec:data}
 We use every trajectory listed by the public HTP-MD web application~\cite{Xie2023HTPMD} on
-6 to 9 October 2026: \nTotal{} amorphous polymer/LiTFSI systems simulated with the PCFF+ force
+6 to 9 October 2026: \nTotal{} trajectories of amorphous polymer/LiTFSI systems simulated with the PCFF+ force
 field at \SI{353}{\kelvin}, \nShort{} for \SI{5}{\nano\second} and \nLong{} for
 \SI{50}{\nano\second} (\cref{si:tab:dataset}). For each trajectory the platform distributes the
 MSD curves of \Li{} and of the anion at 100 lags, derived transport properties and the raw
@@ -152,11 +161,18 @@ finite-lag quantity, not a converged coefficient. To test whether the beginning 
 from its later part, we split each long run into ten consecutive \SI{5}{\nano\second} segments
 and compute, from the data of each segment alone, the end-point and origin-averaged estimates and
 the effective exponent; each segment is compared with the geometric mean of the segments between
-25 and \SI{50}{\nano\second}.
+25 and \SI{50}{\nano\second}. In the same segments we follow the mobility of the anion and of
+polymer atoms, the potential energy and pressure (production is at constant volume), and the
+lithium-anion clusters computed during the simulations (Supporting Information).
 
 \subsection{Noise model, reliability and noise ceiling}\label{sec:noise-method}
-All noise statistics are computed on $\ln D$. A label is treated as the property of the system plus
-the noise of one run, the measurement model also assumed in ref~\citenum{Xie2022Accelerating}.
+All noise statistics are computed on $\ln D$. Following ref~\citenum{Xie2022Accelerating}, we
+model each label as a system-level value plus run-specific noise. Here, the system-level value is
+the expected \SI{5}{\nano\second} label across initial structures and dynamical realizations. It
+can include biases shared by short runs, such as the early slowdown reported below; it is not the
+long-time transport coefficient. Thus, the reliability and noise ceiling describe how well
+short-run labels can be predicted. A separate, system-dependent bias distinguishes those labels
+from the long-time property.
 For the replicated systems, the standard deviation of the difference between the two runs divided
 by $\sqrt2$ estimates the noise $\sigma_{\mathrm{run}}$ of one run. With $\sigma_{\mathrm{tot}}$ the
 spread of all short runs, the reliability of one run is
@@ -174,13 +190,39 @@ reliability $nr/[1+(n-1)r]$~\cite{Spearman1910,Brown1910}. To translate reliabil
 selection we simulate Gaussian populations with the measured variances and record the fraction of
 the truly best 5\%, 10\% and 20\% recovered when selecting by the mean of $n$ runs.
 
-Two sources of noise are separated as follows. Replicas start from different structures, so their
-difference contains structural and dynamic noise. The \SI{5}{\nano\second} run of a pair and the
+Two sources of noise are separated under an additive model with independent structural and
+dynamic contributions, so the split is a statistical attribution conditional on that model rather
+than a causal decomposition. Replicas start from different structures, so their difference
+contains structural and dynamic noise. The \SI{5}{\nano\second} run of a pair and the
 first \SI{5}{\nano\second} of its long run start from the same structure, so their difference
-contains only dynamic noise, $\sigma_{\mathrm{dyn}}$, and
-$\sigma_{\mathrm{str}}^2=\sigma_{\mathrm{run}}^2-\sigma_{\mathrm{dyn}}^2$. We test whether the noise
+contains only dynamic noise, $\sigma_{\mathrm{dyn}}$; the two are distinct dynamical realisations
+(their labels are not identical), although the platform does not document whether they share any
+part of the equilibration. Then
+$\sigma_{\mathrm{str}}^2=\sigma_{\mathrm{run}}^2-\sigma_{\mathrm{dyn}}^2$, with $\sigma_{\mathrm{run}}$ from the
+\nRep{} replicated systems and $\sigma_{\mathrm{dyn}}$ from the \techoEndDynN{} screening pairs. The short
+run of a pair is also the original replica of that system, so the two differences share a run; we
+therefore repeat the split on the \techoEndJointN{} systems that have both, resampling them jointly. We test whether the noise
 depends on mobility by the rank correlation between the absolute difference of two replicas and
 their mean. Intervals throughout are obtained by bootstrap over systems (2000 resamples).
+
+\subsection{Machine-learning demonstration}\label{sec:ml-method}
+To compare a real model with the ceiling we predict the end-point $\ln D$ of the original
+\SI{5}{\nano\second} run of each system from its monomer alone. The input is the Morgan count
+fingerprint (radius 2, 2048 bits; RDKit) of the monomer SMILES distributed by HTP-MD, including
+the dummy atoms that mark the connection points, so chain architecture is not represented. The
+model is a random forest (scikit-learn; 400 trees, a fraction 0.3 of the features per split, at
+least two samples per leaf), with these settings fixed in advance and not tuned. It is trained on
+the \mlNSys{} systems that have an original screening run, literature polymers included
+(\nOnlyReplica{} system appears only as a replica and is left out), and evaluated by
+\mlFolds-fold cross-validation split by system, so that every prediction is out of sample. As a
+stricter split we group the monomers into chemical families by Butina clustering of the Tanimoto
+distances of their binary Morgan fingerprints, at two similarity thresholds, and keep each family
+within one fold. Intervals for the correlations are obtained by bootstrap over systems of the
+out-of-fold predictions. To measure the effect of splitting by trajectory instead of by system,
+we repeat the cross-validation with every trajectory, including the second runs of the replicated
+systems, as its own group, and compare the two splits on the replicated pairs whose two runs fell
+in different folds (\mlLeakPairs{} of the \nRep{}; in the other \mlLeakSameFold{} both runs were
+in the same test fold).
 
 \subsection{Selection from paired runs}\label{sec:selection-method}
 For the \nPairs{} pairs we compare the end-point label of the \SI{5}{\nano\second} run with the
@@ -207,23 +249,35 @@ simulated to \SI{50}{\nano\second}, and cost and error are averaged over all run
 chosen on a random half of the systems and evaluated on the other half (\frSplits{} partitions).
 
 \subsection{Adaptive allocation of replicates}\label{sec:allocation-method}
-Consider a campaign of $N=\alN$ candidates with a budget of $b$ \SI{5}{\nano\second} runs per
+Consider a campaign of $N=\alN$ candidates, a hypothetical population the size of the set of
+short runs, with a budget of $b$ \SI{5}{\nano\second} runs per
 candidate on average, whose goal is the top $k$. System values are drawn from
 $\mathcal N(0,\sigma_{\mathrm{sys}}^2)$ with $\sigma_{\mathrm{sys}}^2=r\sigma_{\mathrm{run}}^2/(1-r)$,
 and each run adds noise whose standard deviation varies linearly with mobility so as to reproduce
 the measured noise of the slow and fast halves; every replicate starts from a new structure and
-carries the full noise. A posterior with a normal prior gives the mean and uncertainty of each
-candidate. We compare three allocations of the budget. \emph{Uniform}: $b$ runs for every
+carries the full noise. The unit of cost is therefore a complete new-structure run, which in the
+HTP-MD protocol comprises \SI{5}{\nano\second} of equilibration and \SI{5}{\nano\second} of
+production; budgets and savings below are counted in such runs. A normal prior and a Gaussian approximation
+of the posterior, with the noise evaluated at the observed mean of each candidate rather than at
+its unknown value, give the mean and uncertainty of each candidate. We compare three allocations of the budget. \emph{Uniform}: $b$ runs for every
 candidate. \emph{Successive halving}~\cite{Jamieson2016SuccessiveHalving}: one run for all, then
 further runs for the best $4k$, $2k$ and $k$, in rounds that restart from $4k$ until the budget
 is spent.
-\emph{Boundary-focused}: one run for all, then batches of 5\% of $N$ further runs to the
+\emph{Boundary-focused}: one run for all, then batches of \alBatchPct\% of $N$ further runs to the
 candidates with the largest $p(1-p)$, where $p$ is the posterior probability of lying above the
-current top-$k$ cut-off, in the spirit of optimal computing budget
-allocation~\cite{Chen2000OCBA}. The final selection is the top $k$ by posterior mean, and the
-metric is the recall of the true top $k$, averaged over \alReps{} simulated campaigns. Robustness
-is checked with the empirical shape of the short-run distribution instead of a normal one, with
-the origin-averaged label, and with a constant instead of a mobility-dependent noise.
+current top-$k$ cut-off (the $k$-th largest posterior mean, treated as fixed within a batch), in the spirit of optimal computing budget
+allocation~\cite{Chen2000OCBA} and of its version for selecting a subset of the best
+designs~\cite{Chen2008OCBAm}. The final selection is the top $k$ by posterior mean, and the
+metric is the recall of the true top $k$, averaged over \alReps{} simulated campaigns (Monte
+Carlo standard error at most \alMCErrMax{} percentage points). As a simple reference we add a
+\emph{two-stage re-screening}: one run for all, then the rest of the budget spread evenly over a
+fixed shortlist of the best $2k$, $4k$ or $8k$ after the first run, taking for each budget the best
+of the three shortlists. Robustness is checked with the empirical shape of the short-run
+distribution instead of a normal one, with the origin-averaged label, with a constant instead of
+a mobility-dependent noise, with a misestimated reliability (the runs follow the measured noise,
+but the allocation and the selection use the ends of its 95\% interval), and with the true
+reliability at either end of that interval. The algorithm and its parameters are given in the
+Supporting Information.
 
 The public data allow a partial check on real runs. In the replicated systems, the first run is
 the original screening run and the second starts from a new structure, and \valAlNCamp{} of them
@@ -265,9 +319,19 @@ not a short transient: the apparent diffusivity keeps falling by a factor of \se
 systems, and the effective exponent of the segments decreases from \segBetaFirst{} in the first
 to \segBetaLate{} in the late ones. Lithium mobility therefore keeps decreasing throughout the
 runs, despite the \SI{5}{\nano\second} equilibration that precedes
-production~\cite{Xie2022Accelerating}; we measure this slowdown, not its cause, which is consistent
-with a slow conformational relaxation of the polymer or of the lithium coordination network that the
-equilibration does not complete.
+production~\cite{Xie2022Accelerating}, and the whole system is still relaxing
+(\cref{si:tab:slowdown}). At constant volume, the potential energy falls between the first and the
+late segments in all \slowN{} systems, by a median \slowPe{}~kcal\,mol$^{-1}$ per atom,
+\slowPeOverNoise{} times the fluctuation of its \SI{100}{\pico\second} averages, and the anion
+and the polymer slow down with lithium ($\times$\slowTfsi{} and $\times$\slowMat). Across
+systems, the slowdown of lithium follows that of the polymer (Spearman \slowCorrMat, 95\%
+interval \slowCorrMatLo{} to \slowCorrMatHi) and the relaxation of the energy (\slowCorrPe), but
+not the change in ion clustering, which is small and uncorrelated with it (\slowCorrCluster).
+The early, faster window is thus consistent with a polymer that has not finished relaxing after the
+equilibration, as expected if lithium transport is slaved to segmental
+dynamics~\cite{Borodin2006PEO,Webb2015Polyester}; these are correlations, not a demonstration of
+cause. Detecting the end of equilibration from the trajectory itself~\cite{Chodera2016Equilibration}
+would be a natural way to start production per system.
 The effect is stronger for the screening polymers (\segEndFirstScreen) than for those taken from
 the literature (\segEndFirstLit).
 
@@ -276,7 +340,8 @@ the literature (\segEndFirstLit).
 \centering
 \includegraphics[width=0.5\textwidth]{figures/fig1_exponent_ecdf.pdf}
 \caption{Cumulative distribution of the effective MSD exponent $\beta$ of \Li{} in the
-\SI{5}{\nano\second} and \SI{50}{\nano\second} runs. The dashed line marks diffusive motion.}
+\SI{5}{\nano\second} and \SI{50}{\nano\second} runs. The dashed line marks diffusive motion
+($\beta=1$); runs are counted as diffusive when $\beta\geq0.9$.}
 \label{fig:regime}
 \end{figure}
 
@@ -299,9 +364,10 @@ runs, each computed from its own data, relative to the segments between 25 and
 \end{figure}
 
 \subsection{Run-to-run noise and its sources}\label{sec:res-noise}
-Two \SI{5}{\nano\second} runs of the same system from different structures differ by a typical
-factor of \RepEndFactor{} for the end-point label ($\sigma_{\mathrm{run}}=\RepEndSd$ in log units)
-and \RepAvgFactor{} for the origin-averaged one (\cref{si:tab:replicas}). Against the spread of the
+A single \SI{5}{\nano\second} run deviates from the value of its system by a typical factor of
+\RepEndFactor{} for the end-point label ($\sigma_{\mathrm{run}}=\RepEndSd$ in log units) and
+\RepAvgFactor{} for the origin-averaged one, estimated from pairs of runs of the same system from
+different structures (\cref{si:tab:replicas}). Against the spread of the
 whole screening set, the reliability of one end-point label is \RepEndIcc{} (95\% interval
 \RepEndIccLo{} to \RepEndIccHi), and \RepAvgIcc{} (\RepAvgIccLo{} to \RepAvgIccHi) for the origin-averaged
 label; the intraclass correlation within the replicated subset agrees (\RepEndIccSub{} and
@@ -312,12 +378,20 @@ first \SI{5}{\nano\second} of its long run, which starts from the same structure
 ratio of \techoEndShortPrefRatio{} with a noise of \techoEndSdDyn, against \RepEndSd{} between
 replicas from different structures: the initial structure accounts for
 \techoEndFracStructPct\% (\techoEndFracStructLo{} to \techoEndFracStructHi\%) of the run-to-run variance
-and the dynamics for the rest. Re-sampling the structure and averaging the dynamics both reduce the
+and the dynamics for the rest; on the \techoEndJointN{} systems with both comparisons, resampled
+jointly, the share is \techoEndJointFracStructPct\% (\techoEndJointFracStructLo{} to
+\techoEndJointFracStructHi\%). The originals, the replicas and the long runs were produced in
+different batches of the data set, but none is shifted or differently spread
+(Supporting Information, after \cref{si:tab:replicas}). Re-sampling the structure and averaging the dynamics both reduce the
 noise. A replicate that starts from a new structure samples both sources, as ensembles of
 independent runs do in other MD applications~\cite{Coveney2016Ensembles}, but it also costs a new
-equilibration; whether it beats extending the same run at equal cost cannot be decided with these
-data. This does not affect the allocation results below, in which every run, uniform or adaptive,
-starts from a new structure. The noise
+equilibration. The measured split shows why that cost can be worth paying: even if extending a
+single run removed the dynamic noise completely, the structural part would remain, and the
+reliability of a label from one structure could not exceed \techoEndOneStructMax, whereas the
+mean of two runs from different structures already reaches \techoEndRelTwo. The bound assumes
+that the memory of the initial structure does not fade as the run is extended, which these data
+cannot test, and a longer run also measures a later, slower window. In the allocation results
+below every run, uniform or adaptive, starts from a new structure. The noise
 also depends on mobility: it is \techoEndSdSlow{} in the slower half of the replicated systems and
 \techoEndSdFast{} in the faster half (rank correlation between the absolute difference and the
 level $\techoEndHetRho$, $p=\techoEndHetP$), whereas the learning model of the original study assumes
@@ -340,21 +414,29 @@ conductivity with the accuracy of about four simulations per polymer~\cite{Xie20
 for the lithium diffusivity studied here, four runs correspond to a reliability of
 \techoEndRelFour.
 
-A real model reaches this ceiling (\cref{tab:ml}). We trained a random forest on Morgan count
-fingerprints (radius 2, 2048 bits) of the monomer of each of the \mlNSys{} screened systems, with
-the end-point label of its original \SI{5}{\nano\second} run as target, and obtained
-out-of-sample predictions by \mlFolds-fold cross-validation split by system. The predictions
+A real model comes close to this ceiling (\cref{tab:ml}). A random forest on Morgan fingerprints
+of the monomer, trained on the \mlNSys{} systems with cross-validation split by system
+(see Methods), gives out-of-sample predictions that
 correlate with the labels with Pearson $r=\mlCorr$ (95\% interval \mlCorrLo{} to \mlCorrHi;
 $R^2=\mlRTwo$), statistically indistinguishable from the estimated ceiling of \techoEndCorr{}
-(95\% interval \techoEndCorrLo{} to \techoEndCorrHi). That the point estimate exceeds the ceiling
+(95\% interval \techoEndCorrLo{} to \techoEndCorrHi): the ratio of the two is \mlCeilRatio, and
+\mlCeilRatioLo{} to \mlCeilRatioHi{} across the interval of the ceiling, whose uncertainty
+dominates. Keeping each chemical family of monomers within one fold barely changes the result: \mlFamFineCorr{} with
+\mlFamFineGroups{} families (Tanimoto $\geq\mlFamFineSim$) and \mlFamCoarseCorr{} with
+\mlFamCoarseGroups{} (Tanimoto $\geq\mlFamCoarseSim$), although the screened chemistry is narrow:
+even then the most similar training monomer has a median similarity of \mlFamCoarseNN, against
+\mlNNSys{} when splitting by system, so this tests interpolation within the screened chemistry,
+not generalisation to new families. That the point estimate exceeds the ceiling
 slightly suggests that the reliability of the whole population is somewhat higher than the
 replicated subset indicates; either way, a simple model is already close to what single short-run
-labels allow, so a better architecture could hardly show an advantage on them. The replicated
+labels allow. Being this close to the estimated ceiling makes further improvements by better
+architectures hard to demonstrate against single short-run labels, although it does not exclude
+them; averaged labels or long-run references would show them more clearly. The replicated
 systems are consistent with the measurement model. For the same predictions, the correlation rises from
 \mlRepA{} and \mlRepB{} against either single label to \mlRepMean{} against the mean of the two,
 as the reliability of a two-run mean predicts (\mlRepMeanExp; gain 95\% interval \mlRepGainLo{}
-to \mlRepGainHi). On such labels, better labels rather than better models are what can raise the
-measured performance.
+to \mlRepGainHi). Against such labels, better labels rather than better models are what can
+raise the measured performance.
 
 Against the long runs, the model, which never saw these systems, ranks the
 \SI{50}{\nano\second} reference as well as the system's own \SI{5}{\nano\second} run among the
@@ -368,8 +450,8 @@ Two practical consequences follow. A test metric computed against single short-r
 exceed the ceiling, so a model close to it is as good as the labels allow, and progress has to be
 measured against averaged labels. And because \techoNRep{} systems appear twice in the public
 dataset, splits should be made by system; in this dataset the effect of splitting by trajectory
-instead is small (\mlLeakTraj{} against \mlLeakSys{} on the \mlLeakN{} replicated trajectories),
-because the model agrees with either run of a replicated system more closely than the two runs
+instead is small (\mlLeakTraj{} against \mlLeakSys{} on the \mlLeakN{} trajectories of the
+\mlLeakPairs{} replicated pairs split across folds), because the model agrees with either run of a replicated system more closely than the two runs
 agree with each other (rank correlation \RepEndRho), so the partner's label adds little.
 
 
@@ -384,8 +466,10 @@ systems when selecting by it.}\label{tab:ceiling}
 \begin{table}[ht]
 \centering
 \caption{Out-of-sample correlation of a random forest on monomer fingerprints with short-run
-labels (cross-validation split by system), against the noise ceiling of each label.}\label{tab:ml}
-\input{tabla_ml}
+labels (cross-validation split by system, or by chemical family of the monomer), against the
+noise ceiling of each label. The ceilings and their intervals rest on the run-to-run noise of
+the \nRep{} replicated systems, not on the \mlNSys{} systems of the first rows.}\label{tab:ml}
+\resizebox{\textwidth}{!}{\input{tabla_ml}}
 \end{table}
 
 \subsection{Selecting candidates from one short run}\label{sec:res-selection}
@@ -409,9 +493,9 @@ The median ratio of \PairEndRatio{} is larger than the \ratioFive{} obtained at 
 the origin-averaged long curves, and this slowdown explains the gap. The short runs behave like the
 first \SI{5}{\nano\second} of the long runs (median ratio \techoEndShortPrefRatio), and that
 first segment is \segEndFirstVsAll{} times faster than the average of all segments, which is
-roughly what separates a single early window from a curve averaged over all time origins. Every
-short label in the dataset is therefore biased upwards by the early, faster part of the
-trajectory, and more so for the screening polymers. For ranking, this bias matters only to the
+roughly what separates a single early window from a curve averaged over all time origins. Short
+labels in the dataset are therefore systematically biased upwards by the early, faster part of
+the trajectory, and more so for the screening polymers. For ranking, this bias matters only to the
 extent that it differs between systems.
 
 \begin{table}[ht]
@@ -429,24 +513,23 @@ pair share their initial structure.}
 When only the first $T$ nanoseconds of a long run are available (\cref{fig:prefix},
 \cref{si:tab:prefix}), the end-point, half-lag and linear-fit estimates overestimate the reference
 at every short length, by typical factors of \preEndErrFive, \preHalfErrFive{} and \preFitErrFive{}
-at \SI{5}{\nano\second}. Their bootstrap intervals seldom contain the reference
-(\preEndCovFive\%, \preHalfCovFive\% and \preFitCovFive\% of the runs): the intervals describe the
-apparent diffusivity at the lags available in the prefix, so a within-run error bar says nothing
-about the distance to the long-lag value. A power-law extrapolation removes most of the systematic
-deviation, with a median ratio of \prePowRatioFive{} and a typical error of \prePowErrFive{} from
-\SI{5}{\nano\second}. It keeps a typical error of \refPowErrMin{} to \refPowErrMax{} against references
-at other lags, but underestimates the late slope of the MSD (median ratio \refPowSlopeRatioFive;
-\cref{si:tab:sens-prefix-ref}): lithium is still accelerating towards diffusion, so the power law
-predicts the apparent diffusivity within the observed window, not the long-time coefficient.
-
-On a single cost-error plane (\cref{fig:frontier}), fixed-length power-law extrapolation forms
-the lower envelope. A typical error of $\times1.5$ requires \frMinFixPowOneFive~ns with it,
-against \frMinFixFitOneFive~ns with a linear fit and \frMinFixEndOneFive~ns with the end-point
-label; for $\times1.3$ the figures are \frMinFixPowOneThree, \frMinFixFitOneThree{} and
-\frMinFixEndOneThree~ns. Adaptive stopping rules save nothing: the regime rules rarely fire, and
-precision rules stop early only at the price of large errors (\cref{si:tab:rules}). A setting
-chosen exactly at the boundary of a target often misses it on held-out systems
-(\cref{si:tab:frontier}), so a margin of one step is advisable.
+at \SI{5}{\nano\second}, and their bootstrap intervals seldom contain it (\preEndCovFive\%,
+\preHalfCovFive\% and \preFitCovFive\% of the runs): a within-run error bar describes the apparent
+diffusivity at the lags available in the prefix, not its distance to the long-lag value. A
+power-law extrapolation removes most of the systematic deviation (median ratio \prePowRatioFive,
+typical error \prePowErrFive{} from \SI{5}{\nano\second}) but ranks the systems slightly worse
+(Spearman \prePowRhoFive{} against \preEndRhoFive{} for the end-point), because it extrapolates an
+exponent that is not reproducible between runs, and it underestimates the late slope of the MSD
+(median ratio \refPowSlopeRatioFive; \cref{si:tab:sens-prefix-ref}). A power law with $\beta<1$
+has no crossover to diffusion: its slope keeps falling with the lag, whereas the true MSD must
+eventually become linear. The extrapolation is therefore an empirical estimate of the apparent
+diffusivity at a chosen lag within or near the observed window, not of the long-time coefficient.
+Adaptive stopping rules, based on the exponent or on the bootstrap precision, do not improve on
+the cost-error frontier of fixed-length runs: they either rarely stop early or stop early at the
+price of large errors (\cref{si:fig:frontier,si:tab:rules}), and settings chosen on half of the systems often miss their
+target on the other half: the power-law length chosen for a typical error of $\times1.3$ meets it
+on the held-out systems in only \frMetFixPowOneThree\% of the partitions (\cref{si:tab:frontier}).
+Within a run, then, there is little to save; the budget is better spent across candidates.
 
 \begin{figure}[ht]
 \centering
@@ -457,20 +540,13 @@ correlation with the reference ranking.}
 \label{fig:prefix}
 \end{figure}
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.7\textwidth]{figures/fig6_cost_error.pdf}
-\caption{Cost-error frontier of estimators and stopping rules on the \frN{} long runs. Each line
-follows one rule as its parameter varies; runs that do not stop before \SI{50}{\nano\second} count
-as \SI{50}{\nano\second}.}\label{fig:frontier}
-\end{figure}
 
 \subsection{Spending the budget across candidates: adaptive allocation}\label{sec:res-allocation}
 The noise model measured above is compatible with the replicated systems: the
 differences between replicas show no departure from a Gaussian (excess kurtosis \alKurt,
 Shapiro-Wilk $p=\alShapiroP$).
-With it, how replicates are distributed matters more than how many are run (\cref{fig:allocation},
-\cref{tab:allocation}). Uniform replicates improve slowly: for the top 10\% of \alN{} candidates
+With it, how replicates are distributed matters more than how many are run (\cref{fig:allocation};
+values in \cref{si:tab:allocation}). Uniform replicates improve slowly: for the top 10\% of \alN{} candidates
 the recall rises from \alUnifTopTenBOne\% with one run to \alUnifTopTenBFour\% with four.
 Boundary-focused allocation reaches \alBoundTopTenBTwo\% with two runs per candidate on average
 and \alBoundTopTenBFour\% with four, and matches four uniform replicates with
@@ -481,7 +557,24 @@ similarly: with the end-point label it is better for the top 1\% at small budget
 (\alHalvingTopOneBOneQuarterEnd\% against \alBoundTopOneBOneQuarterEnd\% with 1.25 runs per
 candidate), and with the origin-averaged label it is worse at larger budgets
 (\alHalvingTopOneBFourAvg\% against \alBoundTopOneBFourAvg\% with four).
-The gain therefore comes from adaptivity, not from a particular rule. The result holds with the empirical distribution of the
+Even a two-stage re-screening, in which the budget left after the first run is spread evenly over
+a fixed shortlist of the best candidates, captures most of the gain: with a shortlist of the best $4k$ fixed in advance it saves
+$\times$\alTwoStageFourkSavingTopOne{} for the top 1\%, $\times$\alTwoStageFourkSavingTopFive{}
+for the top 5\% and $\times$\alTwoStageFourkSavingTopTen{} for the top 10\%, and the best of three
+shortlist sizes, chosen in hindsight, adds little ($\times$\alTwoStageSavingTopOne,
+$\times$\alTwoStageSavingTopFive{} and $\times$\alTwoStageSavingTopTen). Most of the saving therefore comes from not
+spending replicates on candidates that the first run already places far from the cut-off;
+allocating them where the selection is still in doubt adds the rest, and does so without a
+shortlist size to tune. The price is sequential work: in batches of \alBatchPct\% of the
+candidates, matching four uniform replicates takes \alRoundsTopTen{} rounds of simulation and
+analysis for the top 10\% and \alRoundsTopOne{} for the top 1\%, against a single extra round
+for the two-stage re-screening. Where each round waits in a queue, the two-stage scheme is the
+practical choice, and its loss is small for the most selective targets. Nor does the saving depend on knowing the
+reliability exactly: planning with $r=\alRelPlanLo$ or $\alRelPlanHi$ instead of \alRelTrue{} gives
+savings of $\times$\alMisLoSavingTopTen{} and $\times$\alMisHiSavingTopTen{} for the top 10\%
+(\cref{si:tab:alloc-checks}), and if the true reliability lies at either end of its interval the
+saving is $\times$\alTrueLoSavingTopTen{} to $\times$\alTrueHiSavingTopTen{} for the top 10\% and
+$\times$\alTrueLoSavingTopOne{} to $\times$\alTrueHiSavingTopOne{} for the top 1\%. The result holds with the empirical distribution of the
 short runs and with the origin-averaged label, and knowing that slow systems are noisier does not
 improve the allocation (Supporting Information). In practice, a campaign should give one short run to
 every candidate and spend the rest of the budget on new-structure replicates of the candidates
@@ -499,23 +592,22 @@ every system (\valAlBothTen\%), against \valAlRandomTen\% for randomly placed se
 \valAlOnlyATen\% with first runs only. With \valAlKTen{} systems in the top set the difference from
 random placement is not significant (95\% interval from $\valAlDiffLoTen$ to
 $+\valAlDiffHiTen$ percentage points), and for the top 20\% no strategy improves on the first run
-alone; the long runs share their structure with the first runs, which makes this check conservative
-for any second run from a new structure.
+alone. The long runs share their structure with the first runs, which probably favours the first
+run over any second run from a new structure, by an amount we cannot quantify. The calibration
+check, in turn, concerns a second noisy run rather than the latent value that the allocation
+targets. The real runs therefore do not contradict the simulated gains, but they cannot show that
+adaptive allocation beats random placement.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{figures/fig8_allocation.pdf}
 \caption{Recall of the true top set as a function of the mean number of \SI{5}{\nano\second} runs
 per candidate, for three ways of allocating the budget (\alReps{} simulated campaigns of \alN{}
-candidates with the measured noise).}\label{fig:allocation}
+candidates with the measured noise; each run starts from a new, equilibrated structure). The
+true top set is the top $k$ by the expected \SI{5}{\nano\second} label of each system, not by its
+long-time diffusivity.}\label{fig:allocation}
 \end{figure}
 
-\begin{table}[ht]
-\centering
-\caption{Recall of the true top set for each allocation and mean budget (end-point label).}
-\label{tab:allocation}
-\input{tabla_asignacion}
-\end{table}
 
 \subsection{A second property: the anion diffusivity}\label{sec:res-general}
 To test whether these conclusions depend on the property, we repeated the main analyses for the
@@ -525,7 +617,7 @@ label is much less noisy: its reliability is \genTfsiRel{} (95\% interval \genTf
 \genTfsiRelHi) against \genLiRel{} for lithium, so its noise ceiling is higher (\genTfsiCeil{}
 against \genLiCeil) and a short run ranks the screening polymers better against the long runs
 (Spearman \genTfsiRhoScreen{} against \genLiRhoScreen). The structure of the results, however, is
-the same. The random forest reaches the ceiling for both ions (\genTfsiMl{} and \genLiMl), its
+the same. The random forest comes close to the ceiling for both ions (\genTfsiMl{} and \genLiMl), its
 correlation with the mean of two replicas rises as the measurement model predicts (\genTfsiMlMean{}
 against an expected \genTfsiMlMeanExp{} for the anion), and adaptive allocation matches four
 uniform replicates with less than half the runs ($\times$\genTfsiSaving{} and
@@ -545,10 +637,14 @@ noise).}\label{tab:general}
 \Cref{tab:guide} turns these results into recommendations, ordered from the least to the most
 demanding purpose. They apply to the setting studied (LiTFSI in amorphous polymers, PCFF+,
 \SI{353}{\kelvin}); the lengths are those for which this study provides evidence, not universal
-minima. Three recommendations hold for every purpose: report the lag and the estimator of any
+minima. Five recommendations hold for every purpose: check that the potential energy has stopped
+drifting before production starts, report the lag and the estimator of any
 transport label together with the effective exponent of the population, prefer origin-averaged
-estimates to end-point ones, and never read a within-run error bar as the distance to the
-long-time value.
+estimates to end-point ones, never read a within-run error bar as the distance to the long-time
+value, and remember that a lithium self-diffusivity ranks mobility, not conductivity: ion pairs
+and clusters that move together raise $\Dapp$ without carrying net
+charge~\cite{FranceLanord2019NernstEinstein}, so candidates selected by it should be checked for
+ion correlations and transference number before they are called good electrolytes.
 
 \begin{table}[ht]
 \centering
@@ -561,13 +657,18 @@ Purpose & What to do & Evidence in this study \\
 \midrule
 Separate good from poor candidates &
 One \SI{5}{\nano\second} run each; rank by origin-averaged $\Dapp$ &
-Spearman \PairAvgRhoLit{} among widely different polymers \\
+Spearman \PairAvgRhoLit{} among widely different polymers but \PairAvgRhoScreen{} among similar
+screening polymers (origin-averaged estimator); not for fine ranking \\
 \addlinespace
 Find the best candidates under a fixed budget &
-One run each, then new-structure replicates for candidates near the cut-off &
-In simulations with the measured noise, matches four uniform replicates with
-\alEqTopTenUnifFour{} runs per candidate for the top 10\% and \alEqTopOneUnifFour{} for the top
-1\%; real runs consistent but underpowered \\
+One run each, then new-structure replicates for candidates near the cut-off; with few rounds
+available, one re-screening round of a shortlist &
+In simulations with the measured noise, boundary-focused allocation matches four uniform
+replicates with \alEqTopTenUnifFour{} runs per candidate for the top 10\% and
+\alEqTopOneUnifFour{} for the top 1\% (\alRoundsTopTen{} and \alRoundsTopOne{} rounds); a single
+re-screening round of a shortlist of $4k$ fixed in advance saves $\times$\alTwoStageFourkSavingTopTen{} and
+$\times$\alTwoStageFourkSavingTopOne;
+real runs consistent but underpowered \\
 \addlinespace
 Decide between two similar candidates &
 Several new-structure runs each &
@@ -578,12 +679,13 @@ Train or evaluate a model on screening labels &
 Split by system; average replicates where available; compare test metrics with the ceiling &
 Correlation with single labels capped near \techoEndCorr{} (95\% CI \techoEndCorrLo{} to
 \techoEndCorrHi); a fingerprint random forest reaches \mlCorr, and \mlRepMean{} against the mean of
-two runs \\
+two runs; improvements by better models are easier to demonstrate against averaged labels \\
 \addlinespace
 Estimate the apparent diffusivity at a stated lag &
 5 to \SI{10}{\nano\second} with power-law extrapolation, one step above the cheapest setting &
 Typical error \prePowErrFive{} from \SI{5}{\nano\second} against \preFitErrFive{} for a linear
-fit; underestimates the late MSD slope \\
+fit; an empirical estimate at that lag, not of the long-time coefficient (underestimates the late
+MSD slope) \\
 \addlinespace
 Obtain a diffusion coefficient or compare with experiment &
 Simulate until the exponent is compatible with one and $\Dapp$ is flat across lag windows &
@@ -600,27 +702,33 @@ the dataset's authors rather than at random. The reference lag of \SI{25}{\nano\
 converged limit and shares data with the truncated trajectories, so prefix-based errors at long
 $T$ are optimistic. Self-diffusion is a proxy for conductivity, which also depends on ion
 correlations~\cite{FranceLanord2019NernstEinstein}, and finite-size
-effects~\cite{Yeh2004SystemSize} are not corrected. The noise model rests on \nRep{} replicated
-pairs: the allocation gains are predictions of a model that the real runs support but, with
-\valAlNCamp{} systems, cannot confirm with statistical significance; a campaign with several
-replicates per candidate would test them directly.
+effects~\cite{Yeh2004SystemSize} are not corrected. The boxes are small (\tamBoxMin{} to
+\SI{\tamBoxMax}{\nano\metre} side, \tamChainsMin{} to \tamChainsMax{} chains), so each
+initial structure samples few chain conformations and packings; the structural part of the noise
+may be smaller in larger boxes, which would raise the reliability of a single run. The noise model rests on \nRep{} replicated
+pairs: the allocation gains are predictions of a model that the real runs, with \valAlNCamp{} systems,
+do not contradict but cannot confirm; a campaign with several replicates per candidate would test
+them directly. The analysis is largely exploratory: windows, thresholds, estimators and strategies
+were compared on the same data, and only the stopping-rule settings were chosen and evaluated on
+separate halves of the systems.
 
 % =============================================================================
 \section{Conclusions}\label{sec:conclusion}
 % =============================================================================
-Short MD runs make useful but imperfect labels. In the largest public set of polymer electrolyte
-simulations, a \SI{5}{\nano\second} label measures an apparent, time-dependent quantity that is
-inflated by a slow decrease of lithium mobility during the run, and about
-half of its variance across candidates is run-to-run noise that comes in comparable parts from the
-initial structure and from the dynamics. This caps what any model can learn from such labels, and a simple fingerprint model is already
-close to that ceiling; it also
-limits a single run to separating good from poor candidates. The same noise model shows how to
-spend a budget: in simulations with the measured noise, one run per candidate and further runs only
-where the selection is uncertain find the best candidates as reliably as four uniform replicates at
-half the cost or less, a prediction that real runs support but cannot yet confirm, whereas
-stopping individual runs adaptively saves nothing. The same picture holds for the anion
-diffusivity, whose labels are less noisy. Transport coefficients in the long-time limit
-remain out of reach for most systems even with tenfold longer runs.
+Short MD runs provide useful screening labels, but those labels are both time dependent and noisy.
+Across this collection, lithium mobility decreases during a run, together with that of the
+polymer, while the system is still relaxing, so a \SI{5}{\nano\second} label
+can overstate later-time mobility. Run-to-run noise accounts for about half of the variation
+across candidates, with comparable contributions from initial structure and dynamics. This noise
+limits prediction against single-run labels; the fingerprint model already approaches that limit,
+and one run is better at separating very different polymers than ranking similar candidates.
+Simulations with the measured noise suggest a practical allocation: run each candidate once, then
+replicate candidates whose selection status is uncertain. This strategy can match four uniform
+replicates at half the cost or less, although the real-run check is too small to confirm the gain.
+A single re-screening round retains much of the saving, while adaptive stopping within individual
+runs does not improve on fixed-length runs. The anion diffusivity shows a similar pattern, with
+less noisy labels. For most systems, even runs ten times longer do not establish a long-time
+transport coefficient.
 
 % =============================================================================
 \section*{Data and Software Availability}
@@ -651,3 +759,4 @@ The authors declare no competing financial interest.
 \bibliography{references}
 
 \end{document}
+

@@ -42,6 +42,7 @@ if os.path.exists("resultados/prefijos.json"):
         for T, tn in ((2, "Two"), (5, "Five"), (10, "Ten"), (20, "Twenty")):
             M[f"pre{nom}Ratio{tn}"] = f2(fila(k, T)["razon_mediana"]); M[f"pre{nom}Err{tn}"] = f2(fila(k, T)["factor_error"])
             M[f"pre{nom}Cov{tn}"] = f"{100 * fila(k, T)['cobertura_ic95']:.0f}"
+            M[f"pre{nom}Rho{tn}"] = f2(fila(k, T)["spearman"])
     nom_regla = {"regimen_beta_0.9": "BetaNine", "regimen_beta_0.8": "BetaEight", "precision_cv_10": "CvTen", "precision_cv_20": "CvTwenty",
                  "precision_cv_10_potencial": "CvPow"}
     for x in X["reglas"]:
@@ -84,6 +85,31 @@ if os.path.exists("resultados/tamanos.csv"):                              # gene
               "tamBoxMin": f"{E.lx_A.min() / 10:.1f}", "tamBoxMax": f"{E.lx_A.max() / 10:.1f}", "tamBoxMed": f"{E.lx_A.median() / 10:.1f}",
               "tamNIons": f"{E.n_li.median():.0f}", "tamIonsAllEqual": "1" if E.n_li.nunique() == 1 and E.n_tfsi.nunique() == 1 else "0",
               "tamNRecount": str(int((E.fuente_iones_cadenas == "recuento").sum()))})
+if os.path.exists("resultados/tabla_por_trayectoria.csv"):                # sistemas con solo la réplica (sin corrida original)
+    import pandas as pd
+    C5 = pd.read_csv("resultados/tabla_por_trayectoria.csv").query("ns == 5")
+    orig = ~C5.carpeta.str.contains("new_config", na=False)
+    M["nOnlyReplica"] = str(int((orig.groupby(C5.sistema).sum() == 0).sum()))
+if os.path.exists("resultados/techo.json"):                               # réplica nueva frente a extender una sola estructura
+    H = json.load(open("resultados/techo.json"))["D_extremos"]
+    s2_run = H["sd_run"] ** 2; s2_sis = H["fiabilidad"] * s2_run / (1 - H["fiabilidad"]); s2_est = H["sd_estructura"] ** 2
+    M["techoEndOneStructMax"] = f2(s2_sis / (s2_sis + s2_est))          # σ_din → 0: queda solo el ruido de la estructura
+if os.path.exists("resultados/ml_demo.json"):                             # pares replicados con cada réplica en un pliego distinto
+    F = json.load(open("resultados/ml_demo.json"))
+    pares = F["fuga"]["n_trayectorias_replicadas_con_pareja_en_entrenamiento"] // 2
+    M["mlLeakPairs"] = str(pares); M["mlLeakSameFold"] = str(F["replicados"]["n"] - pares)
+    if os.path.exists("resultados/techo.json"):                           # correlación del modelo / techo, con la incertidumbre del techo
+        c = F["todas"]["pearson"]; lo, hi = H["techo_correlacion_ic95"]
+        M["mlCeilRatio"] = f2(c / H["techo_correlacion"]); M["mlCeilRatioLo"] = f2(c / hi); M["mlCeilRatioHi"] = f2(c / lo)
+if os.path.exists("resultados/asignacion.json"):                          # rondas secuenciales de la asignación a la frontera
+    import math
+    A = json.load(open("resultados/asignacion.json"))
+    for top, nt in ((0.01, "One"), (0.1, "Ten")):
+        b = A["equivalencia"][f"D_extremos|normal|{top}|4"]["presupuesto_frontera"]
+        M[f"alRoundsTop{nt}"] = str(math.ceil((b - 1) / A["tanda"] - 1e-9))
+    M["alBatchPct"] = f"{100 * A['tanda']:.0f}"
+    Mo = A["modelo_D_extremos"]                                            # parámetros del modelo de ruido de la simulación
+    M["alSdSys"] = f2(Mo["s_sis"]); M["alNoiseA"] = f2(Mo["a"]); M["alNoiseB"] = f"{Mo['b']:.3f}"
 with open("paper/numeros.tex", "w") as fh:
     fh.write("% Generado por hacer_numeros.py a partir de resultados/preliminar.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")

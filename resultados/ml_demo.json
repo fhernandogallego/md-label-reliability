@@ -2,87 +2,120 @@
  "n_sistemas": 6042,
  "n_trayectorias": 6137,
  "fallos_smiles": 0,
- "fiabilidad": 0.4707535527964626,
+ "fiabilidad": 0.4707535527964627,
  "fiabilidad_2rep": 0.6401528684413248,
- "techo_correlacion": 0.6861148247898908,
+ "techo_correlacion": 0.6861148247898909,
  "particiones": 5,
  "todas": {
-  "pearson": 0.7099855112836418,
+  "pearson": 0.7101016765205432,
   "pearson_ic95": [
-   0.6950415591690222,
-   0.7243447423595125
+   0.6951530554582547,
+   0.7244749441215528
   ],
-  "r2": 0.5040018995382933,
-  "fraccion_del_techo": 1.0347910956465063,
-  "correlacion_implicita_con_propiedad": 1.0347910956465063,
+  "r2": 0.5041673121454954,
+  "fraccion_del_techo": 1.0349604043871197,
+  "correlacion_implicita_con_propiedad": 1.0349604043871197,
   "correlacion_implicita_ic95": [
-   1.0130105545844532,
-   1.055719416325582
+   1.0131730584179282,
+   1.0559091830487832
   ]
  },
  "replicados": {
   "n": 94,
-  "pearson_A": 0.6678615436498654,
+  "pearson_A": 0.6670520044980699,
   "pearson_A_ic95": [
-   0.5243779392140605,
-   0.7726508925756227
+   0.5231122098773184,
+   0.7720337810114897
   ],
-  "pearson_B": 0.6931730678047442,
+  "pearson_B": 0.6938569574149972,
   "pearson_B_ic95": [
-   0.5602212351870219,
-   0.7955392686788932
+   0.5612369028170815,
+   0.7959940044606733
   ],
-  "pearson_media": 0.7790076416095251,
+  "pearson_media": 0.7789582520625595,
   "pearson_media_ic95": [
-   0.6565671132927506,
-   0.856864139774984
+   0.6569673047220055,
+   0.8571157763002604
   ],
-  "media_esperada_por_el_modelo_de_medida": 0.7935681310761662,
+  "media_esperada_por_el_modelo_de_medida": 0.7934948695506964,
   "ganancia_media_ic95": [
-   0.06880196803220265,
-   0.1327609520548181
+   0.0688742969895234,
+   0.1328852204085796
   ]
  },
  "larga": {
   "n": 133,
   "todos": {
    "n": 133,
-   "spearman_modelo": 0.7867140714744799,
-   "pearson_modelo": 0.8620253045740082,
+   "spearman_modelo": 0.7870813397129186,
+   "pearson_modelo": 0.8622198567752245,
    "spearman_corrida_corta": 0.8389783821834096,
-   "pearson_corrida_corta": 0.9198123564953443,
+   "pearson_corrida_corta": 0.9198123564953444,
    "dif_spearman_modelo_menos_corta_ic95": [
-    -0.12904208360310274,
-    0.018970361147196503
+    -0.12811531014305086,
+    0.019270396772344833
    ]
   },
   "cribado": {
    "n": 96,
-   "spearman_modelo": 0.671228974498101,
-   "pearson_modelo": 0.7680821442649218,
+   "spearman_modelo": 0.6709305480195333,
+   "pearson_modelo": 0.7674457567996956,
    "spearman_corrida_corta": 0.6758410200759631,
    "pearson_corrida_corta": 0.716256693376996,
    "dif_spearman_modelo_menos_corta_ic95": [
-    -0.12097470883900574,
-    0.1258841744776193
+    -0.12266736473303715,
+    0.12465457162929616
    ]
   },
   "literatura": {
    "n": 37,
-   "spearman_modelo": 0.6673779042200094,
-   "pearson_modelo": 0.7606297068385642,
+   "spearman_modelo": 0.6695116168800379,
+   "pearson_modelo": 0.7611694209044803,
    "spearman_corrida_corta": 0.9279279279279279,
-   "pearson_corrida_corta": 0.9596822896518181,
+   "pearson_corrida_corta": 0.9596822896518182,
    "dif_spearman_modelo_menos_corta_ic95": [
-    -0.4675536656091354,
-    -0.12308127591461426
+    -0.46719467148968424,
+    -0.11688574110787367
    ]
   }
  },
  "fuga": {
   "n_trayectorias_replicadas_con_pareja_en_entrenamiento": 168,
-  "pearson_division_por_trayectoria": 0.6560163876455558,
-  "pearson_division_por_sistema": 0.6808599902086937,
-  "pearson_todas_division_por_trayectoria": 0.7101303386935501
+  "pearson_division_por_trayectoria": 0.6557571886181941,
+  "pearson_division_por_sistema": 0.6808799586128825,
+  "pearson_todas_division_por_trayectoria": 0.7102006737824365
+ },
+ "familias": {
+  "vecino_division_por_sistema": 0.7222222089767456,
+  "finas": {
+   "distancia_corte": 0.4,
+   "similitud_corte": 0.6,
+   "n_grupos": 1415,
+   "mayor_grupo_frac": 0.017047335319430652,
+   "unitarios": 683,
+   "pearson": 0.7012940066126362,
+   "pearson_ic95": [
+    0.687836298089286,
+    0.714534437415896
+   ],
+   "fraccion_del_techo": 1.0221233841250894,
+   "vecino_en_entrenamiento": 0.6666666865348816,
+   "spearman_larga_cribado": 0.6661421595225177
+  },
+  "gruesas": {
+   "distancia_corte": 0.6,
+   "similitud_corte": 0.4,
+   "n_grupos": 144,
+   "mayor_grupo_frac": 0.18205892088712347,
+   "unitarios": 50,
+   "pearson": 0.7011595913785782,
+   "pearson_ic95": [
+    0.6860370758113312,
+    0.7162674613708279
+   ],
+   "fraccion_del_techo": 1.021927476342308,
+   "vecino_en_entrenamiento": 0.6486486196517944,
+   "spearman_larga_cribado": 0.6685567010309278
+  }
  }
 }
