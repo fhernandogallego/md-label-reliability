@@ -136,7 +136,14 @@ long run has a \SI{5}{\nano\second} run of the same system (\nLongScreen{} scree
 \nLongLit{} taken from the literature), and, as in the original study~\cite{Xie2022Accelerating},
 the two runs of such a pair start from the same initial amorphous structure. In addition, \nRep{}
 screening systems were simulated twice for \SI{5}{\nano\second} from different initial
-structures. Every system contains \tamNIons{} LiTFSI ion pairs at a nominal molality of
+structures. The storage paths label these second runs as a random sample of 100 screening
+systems (\texttt{rand\_100}), and \techoEndReprOverlap{} of the \nLongScreen{} long screening runs
+belong to the same systems. Neither subset is selected by mobility: the short-run labels of the
+replicated systems and of the systems with a long run are distributed as those of the rest of the
+screening set (Kolmogorov--Smirnov $p=\techoEndReprKsRep$ and $\techoEndReprKsLong$; Levene
+$p=\techoEndReprLevRep$ and $\techoEndReprLevLong$), so the noise they measure applies to the
+whole screening population. Only the \nLongLit{} literature polymers were chosen deliberately, and
+they are analysed separately. Every system contains \tamNIons{} LiTFSI ion pairs at a nominal molality of
 \SI{1.5}{\mole\per\kilo\gram}, equilibrated for \SI{5}{\nano\second} before
 production~\cite{Xie2022Accelerating}; from the starting structures, the systems have
 \tamNAtomsMin{} to \tamNAtomsMax{} atoms (median \tamNAtomsMed) in \tamChainsMin{} to
@@ -399,6 +406,22 @@ noise independent of the polymer~\cite{Xie2022Accelerating}. Two candidates meas
 differ by a factor of \RepEndPairFactor{} from noise alone at one standard deviation and up to
 \RepEndPairFactorNinetyFive{} at the 95\% level.
 
+The structural share has a chemical origin in how slowly the lithium solvation shell renews. In
+the \solvN{} long runs, a lithium ion has a median of \solvCnScreen{} polymer atoms within
+\SI{\solvRcut}{\angstrom} in the screening polymers and \solvCnLit{} in the literature polymers,
+and \solvPersFiveScreen\% and \solvPersFiveLit\% of those contacts are still present after
+\SI{5}{\nano\second} (\cref{si:tab:solvation}). A short run therefore samples essentially the
+solvation environment it starts from, and a new initial structure brings a new one. Ion
+aggregation, read from the cluster populations of the platform, matters more than polymer
+solvation for the bias of short labels: systems with more lithium in large clusters are slower
+(rank correlation \solvAggrD, 95\% interval \solvAggrDLo{} to \solvAggrDHi), are more overestimated
+by the short run (\solvAggrOver, \solvAggrOverLo{} to \solvAggrOverHi) and are ranked worse by it
+(\solvAggrRank, \solvAggrRankLo{} to \solvAggrRankHi), consistent with cluster rearrangement being
+one of the slow processes that \SI{5}{\nano\second} does not reach. No solvation descriptor
+predicts the replica noise of a system (all rank correlations within $\pm\solvNoiseMaxAbs$), so a
+single reliability for the whole screening population, as used below, is not hiding a chemistry
+with markedly noisier labels.
+
 \subsection{A noise ceiling for learned predictors}\label{sec:res-ceiling}
 The reliability bounds what any predictor can achieve against short-run labels
 (\cref{tab:ceiling}). A model that recovered the property of every system exactly would correlate
@@ -609,9 +632,14 @@ long-time diffusivity.}\label{fig:allocation}
 \end{figure}
 
 
-\subsection{A second property: the anion diffusivity}\label{sec:res-general}
+\subsection{Other properties: anion diffusivity and ionic conductivity}\label{sec:res-general}
 To test whether these conclusions depend on the property, we repeated the main analyses for the
-diffusivity of the TFSI anion (\cref{tab:general}). Because the platform distributes only the
+diffusivity of the TFSI anion and for the ionic conductivity distributed by the platform
+(\cref{tab:general}), which is the property the original study set out to
+predict~\cite{Xie2022Accelerating}. That conductivity is a cluster Nernst--Einstein
+estimate~\cite{FranceLanord2019NernstEinstein}: it combines the end-point diffusivities of both
+ions with the populations of ionic clusters, so it includes ion pairing (we reproduced the
+distributed values from the trajectories to within a constant unit factor). Because the platform distributes only the
 origin-averaged estimate for the anion, both ions are compared with that estimator. The anion
 label is much less noisy: its reliability is \genTfsiRel{} (95\% interval \genTfsiRelLo{} to
 \genTfsiRelHi) against \genLiRel{} for lithium, so its noise ceiling is higher (\genTfsiCeil{}
@@ -621,16 +649,29 @@ the same. The random forest comes close to the ceiling for both ions (\genTfsiMl
 correlation with the mean of two replicas rises as the measurement model predicts (\genTfsiMlMean{}
 against an expected \genTfsiMlMeanExp{} for the anion), and adaptive allocation matches four
 uniform replicates with less than half the runs ($\times$\genTfsiSaving{} and
-$\times$\genLiSaving{} for the top 10\%). The numbers are specific to each property, but for these two properties the
+$\times$\genLiSaving{} for the top 10\%). The conductivity behaves in the same way: its
+reliability is \genCondRel{} (\genCondRelLo{} to \genCondRelHi), its ceiling \genCondCeil, and
+adaptive allocation saves $\times$\genCondSaving. One difference is chemical. The random forest
+falls short of the conductivity ceiling (\genCondMl{} against \genCondCeil), whereas it comes close to
+those of both diffusivities: monomer fingerprints describe the mobility of the ions better than
+how they pair. And ranking by lithium mobility is not ranking by conductivity. Across the
+screened systems the two labels of the same run have a rank correlation of only
+\genCondVsLiRhoShort{} (\genCondVsLiRhoLong{} for the long runs), and the best 10\% by lithium
+diffusivity contain \genCondVsLiTopTenPct\% of the best 10\% by conductivity, although the noise of
+the two labels is largely shared (correlation \genCondVsLiNoiseCorr{} between the replica
+differences). The choice of label is therefore a decision about chemistry, not only about noise:
+a campaign that looks for good conductors should screen the conductivity, with the same noise
+analysis. The numbers are specific to each property, but for these three properties the
 conclusions are the same.
 
 \begin{table}[ht]
 \centering
 \caption{Main results for the lithium and the TFSI anion diffusivities, both with the
-origin-averaged estimator at half the run length. Noise statistics from the \nRep{} replicated
+origin-averaged estimator at half the run length, and for the cluster Nernst--Einstein
+conductivity distributed by the platform. Noise statistics from the \nRep{} replicated
 systems; random forest and allocation as in the previous sections (allocation with constant
 noise).}\label{tab:general}
-\input{tabla_generalidad}
+\resizebox{\textwidth}{!}{\input{tabla_generalidad}}
 \end{table}
 
 \subsection{Practical guidance}\label{sec:res-guide}
@@ -700,8 +741,8 @@ properties, the lithium and anion diffusivities, but other properties, such as t
 may have different noise. The long runs were chosen by
 the dataset's authors rather than at random. The reference lag of \SI{25}{\nano\second} is not a
 converged limit and shares data with the truncated trajectories, so prefix-based errors at long
-$T$ are optimistic. Self-diffusion is a proxy for conductivity, which also depends on ion
-correlations~\cite{FranceLanord2019NernstEinstein}, and finite-size
+$T$ are optimistic. Self-diffusion is only a proxy for conductivity, and the cluster Nernst--Einstein conductivity
+neglects correlations between different clusters~\cite{FranceLanord2019NernstEinstein}; finite-size
 effects~\cite{Yeh2004SystemSize} are not corrected. The boxes are small (\tamBoxMin{} to
 \SI{\tamBoxMax}{\nano\metre} side, \tamChainsMin{} to \tamChainsMax{} chains), so each
 initial structure samples few chain conformations and packings; the structural part of the noise

@@ -1,9 +1,12 @@
 % =============================================================================
-%  Supporting Information for jcim.tex (J. Chem. Inf. Model.). Compile si.tex BEFORE jcim.tex:
-%  the manuscript imports the S-numbered labels of this document through xr.
+%  Supplementary Material for jcs.tex (Journal of Computational Science). Compile si.tex BEFORE
+%  jcs.tex: the manuscript imports the S-numbered labels of this document through xr.
+%  (jcim.tex, the earlier JCIM version, imports the same labels.)
 % =============================================================================
-\documentclass[journal=jcisd8,manuscript=suppinfo]{achemso}
+\documentclass[11pt]{article}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.5cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{array}
@@ -12,7 +15,7 @@
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage[section]{placeins}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage[capitalise]{cleveref}
 \input{preambulo_comun}
 
@@ -21,11 +24,14 @@
 \renewcommand{\thesection}{S\arabic{section}}
 \renewcommand{\theequation}{S\arabic{equation}}
 
-\input{autores}
-
-\title{Reliability of Short Molecular Dynamics Runs as Screening Labels}
+\title{Supplementary Material\\[4pt]\large Reliability of Short Molecular Dynamics Runs as Screening
+Labels: Noise Ceilings, Time Dependence and Adaptive Replicate Allocation}
+\author{Francisco Hernando-Gallego, Dimitar Vasilev-Vasilev, Diego Garc\'ia-Santos,\\
+Alfonso Campo-Camacho, Alberto G\'omez-G\'omez}
+\date{}
 
 \begin{document}
+\maketitle
 
 \section{Data set}\label{si:sec:data}
 \begin{table}[ht]
@@ -157,6 +163,26 @@ $p=\techoEndBatchLeveneP$; \techoEndBatchSdOther{} in the rest of the screening 
 estimates use the standard deviation of the differences, which excludes a constant offset; without
 removing it the reliability is \techoEndRelUncentred{}, unchanged. Batch and initial structure
 cannot be fully separated, because every replica is both new and from a later batch.
+
+\section{Lithium solvation and ion aggregation}\label{si:sec:solvation}
+For each of the \solvN{} long runs (\solvNScreen{} screening and \solvNLit{} literature polymers),
+the polymer atoms kept from the trajectories (\cref{si:sec:data}) within \SI{\solvRcut}{\angstrom}
+of a lithium ion count as its first shell; this is the cut-off the platform uses for
+lithium-anion contacts and the first minimum of the lithium-polymer pair distribution. As noted
+above, these atoms are of the types the platform lists as solvating but are not always the ones
+that coordinate lithium, so the shell describes the local polymer environment of each ion rather
+than its coordination. The persistence of the shell is the intermittent correlation of these contacts at a given lag, and
+ion aggregation comes from the cluster populations distributed with each trajectory. Rank
+correlations are taken over all long runs (replica noise: the \techoEndJointN{} replicated
+systems with a long run); bold values have a 95\% bootstrap interval that excludes zero.
+
+\begin{table}[ht]
+\centering
+\caption{Lithium solvation and aggregation in the long runs, and their rank correlation with the
+long-run diffusivity, the overestimation by the short run ($\ln D_5-\ln D_{50}$), its rank error
+and the noise between replicas.}\label{si:tab:solvation}
+\resizebox{\textwidth}{!}{\input{tabla_solvatacion}}
+\end{table}
 
 \section{End-point estimator}\label{si:sec:endpoint}
 The end-point value of the \SI{5}{\nano\second} runs deviates from the power law fitted over

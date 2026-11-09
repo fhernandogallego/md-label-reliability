@@ -18,6 +18,8 @@ Intervalos: bootstrap por sistemas (réplicas, conjunto de cortas y pares remues
 pares de cribado y σ_run de las 94 réplicas; como la corta de cada par ES la réplica original, se repite la separación en
 los 92 sistemas que tienen las dos cosas con un bootstrap conjunto por sistema, y se comprueba el efecto de tanda
 (originales 20200623, réplicas 20200824, largas 20200714): desplazamiento medio y dispersión de cada tanda.
+Representatividad: las réplicas son la tanda rand_100 (muestra aleatoria); KS y Levene de los replicados y de los
+sistemas con larga frente al resto del cribado.
 Uso: python techo.py → resultados/techo.json, paper/tabla_techo.tex, paper/numeros_techo.tex
 """
 import glob, json
@@ -150,6 +152,18 @@ for col, col_par, col_pref in (("D_extremos", "D5_extremos", "pref_extremos"), (
           "sd_run_sin_centrar": float(np.sqrt(np.mean(dA ** 2) / 2)),
           "fiabilidad_sin_centrar": float(1 - np.mean(dA ** 2) / 2 / np.log(cortas[col]).var(ddof=1))}
     R[col]["separacion_conjunta"] = J; R[col]["tandas"] = L5
+    # representatividad: las réplicas forman la tanda que el conjunto de datos llama rand_100 (muestra aleatoria de 100
+    # sistemas de cribado); se compara la etiqueta original de esos sistemas, y la de los sistemas con corrida larga de
+    # cribado, con el resto del cribado (sin literatura)
+    orig = cortas.groupby("sistema").first(); orig = orig[~orig.literatura]; lo = np.log(orig[col])
+    en_rep = orig.index.isin(xa.index); en_larga = orig.index.isin(cribado.index)
+    R[col]["representatividad"] = {
+        "carpeta_replicas": sorted(rep[rep.carpeta.str.contains("new_config", na=False)].carpeta.unique().tolist()),
+        "n_replicados": int(en_rep.sum()), "n_larga_cribado": int(en_larga.sum()), "n_larga_en_replicados": int((en_rep & en_larga).sum()),
+        **{f"{nom_}_{q}": v for nom_, sel in (("replicados", en_rep), ("larga", en_larga)) for q, v in (
+            ("media", float(lo[sel].mean())), ("media_resto", float(lo[~sel].mean())), ("sd", float(lo[sel].std(ddof=1))),
+            ("sd_resto", float(lo[~sel].std(ddof=1))), ("ks_p", float(stats.ks_2samp(lo[sel], lo[~sel]).pvalue)),
+            ("levene_p", float(stats.levene(lo[sel], lo[~sel]).pvalue)))}}
 
 json.dump(R, open("resultados/techo.json", "w"), indent=1)
 
@@ -197,6 +211,10 @@ for col, nom in (("D_extremos", "End"), ("D_medio", "Avg")):
     M[f"techo{nom}BatchSdOrig"] = f2(L5["sd_entre_sistemas_originales"]); M[f"techo{nom}BatchSdRep"] = f2(L5["sd_entre_sistemas_replicas"])
     M[f"techo{nom}BatchSdOther"] = f2(L5["sd_cribado_no_replicado"]); M[f"techo{nom}BatchLeveneP"] = f2(L5["p_levene_original_replica"])
     M[f"techo{nom}RelUncentred"] = f2(L5["fiabilidad_sin_centrar"])
+    Rp = e["representatividad"]
+    M[f"techo{nom}ReprKsRep"] = f2(Rp["replicados_ks_p"]); M[f"techo{nom}ReprKsLong"] = f2(Rp["larga_ks_p"])
+    M[f"techo{nom}ReprLevRep"] = f2(Rp["replicados_levene_p"]); M[f"techo{nom}ReprLevLong"] = f2(Rp["larga_levene_p"])
+    M[f"techo{nom}ReprOverlap"] = str(Rp["n_larga_en_replicados"])
 with open("paper/numeros_techo.tex", "w") as fh:
     fh.write("% Generado por techo.py a partir de resultados/techo.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")

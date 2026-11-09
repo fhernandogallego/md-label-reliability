@@ -1,4 +1,6 @@
-"""Generalidad: ¿se mantienen los resultados principales con otra propiedad, la difusividad del anión TFSI?
+"""Generalidad: ¿se mantienen los resultados principales con otras propiedades, la difusividad del anión TFSI y la
+conductividad iónica de HTP-MD (Nernst-Einstein por agregados, con difusividades end-point; la que predecía el modelo de
+Xie et al.)? Para la conductividad se mide además cuánto se parece su orden al de la difusividad del Li.
 
 Para comparar en igualdad de condiciones se usa para los dos iones el mismo estimador, el promediado en orígenes a T/2
 (D_medio para el Li, D_tfsi_medio para el TFSI; el end-point del TFSI no está en los datos distribuidos). Para cada ion:
@@ -26,9 +28,12 @@ from comun import fiabilidad_bootstrap
 RDLogger.DisableLog("rdApp.*")
 N_BOOT, N_MC, N_PART, SEMILLA, TOP, TANDA = 2000, 100, 5, 20261019, 0.10, 0.05
 PRESUPUESTOS = [1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0]
-ETIQUETAS = {"Li": "D_medio", "TFSI": "D_tfsi_medio"}
+ETIQUETAS = {"Li": "D_medio", "TFSI": "D_tfsi_medio", "Cond": "cond"}
 rng = np.random.default_rng(SEMILLA)
 T = pd.read_csv("resultados/tabla_por_trayectoria.csv").merge(pd.read_csv("resultados/estructuras.csv")[["id", "mol_smiles"]], on="id", how="left")
+# conductividad de HTP-MD: Nernst-Einstein por agregados (France-Lanord y Grossman 2019; htp_md compute_conductivity), con las
+# difusividades end-point del Li y del TFSI y la población de agregados iónicos (comprobado: razón constante con nuestro cálculo)
+T = T.merge(pd.read_csv("data/molality-vs-conductivity.csv").rename(columns={"Sample ID": "id", "Li-ion Conductivity (S/cm)": "cond"})[["id", "cond"]], on="id", how="left")
 cortas = T[T.ns == 5].sort_values("id").copy()
 cortas["original"] = ~cortas.carpeta.str.contains("new_config", na=False)
 rep = cortas.groupby("sistema").filter(lambda g: len(g) == 2)
@@ -99,6 +104,19 @@ for ion, col in ETIQUETAS.items():
     # asignación
     e["asignacion"] = asignacion(r, sr, np.random.default_rng(SEMILLA))
     R[ion] = e
+
+# conductividad frente a la difusividad del Li (la etiqueta principal del texto, end-point): ¿ordenar por movilidad del Li
+# selecciona los mejores conductores? La diferencia es el emparejamiento iónico y la contribución del anión.
+o = cortas[cortas.original & ~cortas.literatura].drop_duplicates("sistema")
+k10 = round(0.10 * len(o)); top = lambda v: set(np.argsort(-np.asarray(v))[:k10])
+dc = np.log(rep[rep.original].set_index("sistema").cond) - np.log(rep[~rep.original].set_index("sistema").cond)
+dl = np.log(rep[rep.original].set_index("sistema").D_extremos) - np.log(rep[~rep.original].set_index("sistema").D_extremos)
+Lc = L[~L.literatura.astype(bool)]
+R["Cond"]["frente_a_DLi"] = {
+    "spearman_sistemas_cortas": float(stats.spearmanr(o.cond, o.D_extremos)[0]),
+    "spearman_sistemas_largas": float(stats.spearmanr(Lc.cond, Lc.D_extremos)[0]),
+    "solape_top10_cortas": len(top(o.cond) & top(o.D_extremos)) / k10,
+    "corr_ruido_replicas": float(np.corrcoef(dc[dl.index], dl)[0, 1])}
 json.dump(R, open("resultados/generalidad.json", "w"), indent=1)
 
 f2 = lambda v: f"{v:.2f}"
@@ -113,16 +131,18 @@ filas = [("Run-to-run noise (log)", lambda e: f2(e["sd_run"])),
          ("Runs matching 4 uniform replicates (top 10\\%)",
           lambda e: f"{e['asignacion']['presupuesto_iguala_4']:.1f} ($\\times${e['asignacion']['ahorro_frente_a_4']:.1f})")]
 with open("paper/tabla_generalidad.tex", "w") as fh:
-    fh.write("% Generado por generalidad.py. No editar a mano.\n\\begin{tabular}{lrr}\n\\toprule\n & \\Li{} & TFSI$^-$ \\\\\n\\midrule\n")
-    for nombre, f in filas: fh.write(f"{nombre} & {f(R['Li'])} & {f(R['TFSI'])} \\\\\n")
+    fh.write("% Generado por generalidad.py. No editar a mano.\n\\begin{tabular}{lrrr}\n\\toprule\n & \\Li{} & TFSI$^-$ & Conductivity \\\\\n\\midrule\n")
+    for nombre, f in filas: fh.write(f"{nombre} & {f(R['Li'])} & {f(R['TFSI'])} & {f(R['Cond'])} \\\\\n")
     fh.write("\\bottomrule\n\\end{tabular}\n")
 M = {}
-for ion, nn in (("Li", "Li"), ("TFSI", "Tfsi")):
+for ion, nn in (("Li", "Li"), ("TFSI", "Tfsi"), ("Cond", "Cond")):
     e = R[ion]
     M.update({f"gen{nn}Rel": f2(e["fiabilidad"]), f"gen{nn}RelLo": f2(e["fiabilidad_ic95"][0]), f"gen{nn}RelHi": f2(e["fiabilidad_ic95"][1]),
               f"gen{nn}Ceil": f2(e["techo"]), f"gen{nn}Ml": f2(e["ml_pearson"]), f"gen{nn}MlMean": f2(e["ml_rep_media"]),
               f"gen{nn}MlMeanExp": f2(e["ml_rep_media_esperada"]), f"gen{nn}RhoScreen": f2(e["spearman_larga_cribado"]),
               f"gen{nn}Saving": f"{e['asignacion']['ahorro_frente_a_4']:.1f}", f"gen{nn}SdSlow": f2(e["sd_lentos"]), f"gen{nn}SdFast": f2(e["sd_rapidos"])})
+X = R["Cond"]["frente_a_DLi"]; M.update({"genCondVsLiRhoShort": f2(X["spearman_sistemas_cortas"]), "genCondVsLiRhoLong": f2(X["spearman_sistemas_largas"]),
+                                        "genCondVsLiTopTenPct": f"{100 * X['solape_top10_cortas']:.0f}", "genCondVsLiNoiseCorr": f2(X["corr_ruido_replicas"])})
 with open("paper/numeros_generalidad.tex", "w") as fh:
     fh.write("% Generado por generalidad.py a partir de resultados/generalidad.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")

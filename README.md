@@ -15,14 +15,14 @@ download what they need from the HTP-MD platform.
 |---|---|
 | `*.py`, `actualizar.sh` | Analysis pipeline. `actualizar.sh` runs every step and regenerates all numbers, tables and figures |
 | `resultados/` | Derived results: per-trajectory table, structures (SMILES), per-trajectory caches of the prefix and segment analyses, and one JSON file per analysis |
-| `paper/` | LaTeX sources of the manuscript (`jcim.tex`) and Supporting Information (`si.tex`). Every number in the text is a macro written by the scripts (`numeros*.tex`, `tabla_*.tex`) |
+| `paper/` | LaTeX sources of the manuscript (`jcs.tex`; `jcim.tex` is the earlier JCIM version) and Supplementary Material (`si.tex`). Every number in the text is a macro written by the scripts (`numeros*.tex`, `tabla_*.tex`) |
 
 Main scripts: `analizar_curvas.py` (regime and lag dependence), `incertidumbre.py` and `techo.py` (reliability,
 noise ceiling, noise sources), `analizar_prefijos.py`, `referencias.py` and `frontera.py` (truncated
 trajectories, stopping rules, cost-error frontier), `segmentos.py` (ageing within runs), `ralentizacion.py` (what slows down with the lithium: anion, polymer
-and energy relaxation), `asignacion.py` and
+and energy relaxation), `solvatacion.py` (local polymer environment of lithium and ion aggregation), `asignacion.py` and
 `validacion_asignacion.py` (adaptive replicate allocation and its check on real runs), `ml_demo.py`
-(random forest against the noise ceiling), `generalidad.py` (the same analyses for the anion diffusivity), `toc.py` (table-of-contents graphic);
+(random forest against the noise ceiling), `generalidad.py` (the same analyses for the anion diffusivity and the ionic conductivity), `toc.py` (table-of-contents graphic);
 `comun.py` holds the shared random seed. Script comments are in Spanish.
 
 ## Reproducing the results
@@ -30,7 +30,7 @@ and energy relaxation), `asignacion.py` and
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ./actualizar.sh
-cd paper && pdflatex si && pdflatex jcim && bibtex jcim && pdflatex jcim && pdflatex jcim
+cd paper && pdflatex si && pdflatex jcs && bibtex jcs && pdflatex jcs && pdflatex jcs
 ```
 
 Without the raw data in `data/`, the scripts regenerate their tables, macros and figures from the saved

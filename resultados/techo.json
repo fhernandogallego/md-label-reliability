@@ -198,6 +198,26 @@
    "sd_cribado_no_replicado": 0.4718817333647434,
    "sd_run_sin_centrar": 0.3543295374433058,
    "fiabilidad_sin_centrar": 0.47047821067900497
+  },
+  "representatividad": {
+   "carpeta_replicas": [
+    "poly_5ns_new_config_rand_100"
+   ],
+   "n_replicados": 94,
+   "n_larga_cribado": 96,
+   "n_larga_en_replicados": 92,
+   "replicados_media": -1.851386299535483,
+   "replicados_media_resto": -1.8766715669298848,
+   "replicados_sd": 0.50116611609224,
+   "replicados_sd_resto": 0.4718817333647434,
+   "replicados_ks_p": 0.6063138936736758,
+   "replicados_levene_p": 0.8219273519997451,
+   "larga_media": -1.846104604820986,
+   "larga_media_resto": -1.8767659496697935,
+   "larga_sd": 0.50242806685804,
+   "larga_sd_resto": 0.4718446082754529,
+   "larga_ks_p": 0.6484847611960749,
+   "larga_levene_p": 0.6517532698263546
   }
  },
  "D_medio": {
@@ -393,6 +413,26 @@
    "sd_cribado_no_replicado": 0.41171806709995595,
    "sd_run_sin_centrar": 0.2781661264573718,
    "fiabilidad_sin_centrar": 0.5756245991535869
+  },
+  "representatividad": {
+   "carpeta_replicas": [
+    "poly_5ns_new_config_rand_100"
+   ],
+   "n_replicados": 94,
+   "n_larga_cribado": 96,
+   "n_larga_en_replicados": 92,
+   "replicados_media": -1.5511810004380158,
+   "replicados_media_resto": -1.5570044219451808,
+   "replicados_sd": 0.445322220837858,
+   "replicados_sd_resto": 0.41171806709995595,
+   "replicados_ks_p": 0.7752536427117802,
+   "replicados_levene_p": 0.5884609339773367,
+   "larga_media": -1.5538112422688544,
+   "larga_media_resto": -1.556963654109577,
+   "larga_sd": 0.4466646044630464,
+   "larga_sd_resto": 0.41168328936403537,
+   "larga_ks_p": 0.7989183015396998,
+   "larga_levene_p": 0.48172323595681066
   }
  },
  "tandas": {

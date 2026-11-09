@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this code or data, please cite the paper and this software."
 title: "Reliability of short molecular dynamics runs as screening labels: code and derived data"
-version: "1.0.6"
-date-released: "2026-10-24"
+version: "1.0.7"
+date-released: "2026-11-09"
 license: MIT
 repository-code: "https://github.com/fhernandogallego/md-label-reliability"
 authors:
