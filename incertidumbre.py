@@ -13,19 +13,21 @@ import json
 import numpy as np
 import pandas as pd
 from scipy import stats
-from comun import N_BOOT, SEMILLA_BOOT as SEMILLA, ic, fiabilidad_bootstrap, recall_top
+from comun import N_BOOT, SEMILLA_BOOT as SEMILLA, ic, fiabilidad_bootstrap, recall_top, originales_cribado
 
 rng = np.random.default_rng(SEMILLA)
 T = pd.read_csv("resultados/tabla_por_trayectoria.csv")
 cortas = T[T.ns == 5].sort_values("id")
-R = {"n_boot": N_BOOT, "semilla": SEMILLA}
+poblacion = originales_cribado(T)
+R = {"n_boot": N_BOOT, "semilla": SEMILLA, "poblacion": "original screening systems", "n_poblacion": len(poblacion)}
 
 # ---------- Réplicas: ruido, fiabilidad e ICC ----------
 rep = cortas.groupby("sistema").filter(lambda g: len(g) == 2).sort_values(["sistema", "id"])
 R["replicas"] = {"n_sistemas": int(rep.sistema.nunique())}
 for col in ("D_extremos", "D_medio"):
     g = rep.groupby("sistema")[col]                                    # comun.fiabilidad_bootstrap: misma cifra e IC en todo el texto
-    R["replicas"][col] = fiabilidad_bootstrap(np.log(g.first()), np.log(g.last()), np.log(cortas[col].values))
+    R["replicas"][col] = fiabilidad_bootstrap(np.log(g.first()), np.log(g.last()), np.log(poblacion[col].values))
+    R["replicas"][col]["sensibilidad_todas_cortas"] = fiabilidad_bootstrap(np.log(g.first()), np.log(g.last()), np.log(cortas[col].values))
     s2 = np.sqrt(2) * R["replicas"][col]["sd_run"]                                  # diferencia entre dos candidatos medidos con una corrida cada uno
     R["replicas"][col].update({"factor_diferencia_1sd": float(np.exp(s2)), "factor_diferencia_95": float(np.exp(1.96 * s2))})
 
@@ -81,3 +83,14 @@ with open("paper/tabla_seleccion.tex", "w") as fh:
     fh.write("\\bottomrule\n\\end{tabular}\n")
 
 print(json.dumps(R, indent=1))
+
+# Sensibilidad a incluir literatura y réplicas en el denominador.
+with open("paper/tabla_poblacion.tex", "w") as fh:
+    fh.write("\\begin{tabular}{lrr}\n\\toprule\nLabel & Original screening systems & All short trajectories \\\\\n\\midrule\n")
+    for col, label in (("D_extremos", "End-point"), ("D_medio", "Origin-averaged")):
+        q = R["replicas"][col]; broad = q["sensibilidad_todas_cortas"]
+        def cell(z):
+            lo, hi = z["fiabilidad_ic95"]
+            return f"{z['fiabilidad']:.2f} ({lo:.2f} to {hi:.2f})"
+        fh.write(f"{label} & {cell(q)} & {cell(broad)} \\\\\n")
+    fh.write("\\bottomrule\n\\end{tabular}\n")

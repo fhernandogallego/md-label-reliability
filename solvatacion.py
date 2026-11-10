@@ -132,14 +132,15 @@ NOMD = {"cn_polimero": "Polymer atoms in the first shell", "frac_li_sin_polimero
         "frac_li_libre": "Free Li$^+$ (no anion)", "frac_li_agregado_grande": "Li$^+$ in clusters of $\\geq5$ Li$^+$"}
 NOMO = {"lnD50": "$\\ln D$, 50 ns", "sobreestimacion": "Overestimation", "error_orden": "Rank error", "ruido_replicas": "Replica noise"}
 with open("paper/tabla_solvatacion.tex", "w") as fh:
-    fh.write("% Generado por solvatacion.py. No editar a mano.\n\\begin{tabular}{lrr" + "r" * len(NOMO) + "}\n\\toprule\n"
-             " & \\multicolumn{2}{c}{Median} & \\multicolumn{" + str(len(NOMO)) + "}{c}{Rank correlation with} \\\\\n"
-             "\\cmidrule(lr){2-3}\\cmidrule(lr){4-" + str(3 + len(NOMO)) + "}\nDescriptor & Screening & Literature & " + " & ".join(NOMO.values()) + " \\\\\n\\midrule\n")
-    for k, nom in NOMD.items():
-        a, b = R["medianas_cribado_literatura"][k]; fa = (lambda v: f"{v:.1f}") if k == "cn_polimero" else (lambda v: f"{100 * v:.0f}\\%")
-        celdas = []
-        for o in NOMO:
-            e = R["correlaciones"][f"{k}|{o}"]; sig = e["ic95"][0] > 0 or e["ic95"][1] < 0
-            celdas.append(("\\textbf{" if sig else "") + f"{e['spearman']:+.2f}" + ("}" if sig else ""))
-        fh.write(f"{nom} & {fa(a)} & {fa(b)} & " + " & ".join(celdas) + " \\\\\n")
+    fh.write("\\begin{tabular}{llrr}\n\\toprule\nDescriptor & Outcome & Raw correlation & Partial correlation \\\\\n\\midrule\n")
+    for d, label in (("frac_li_libre", "Free Li"), ("frac_li_agregado_grande", "Li in large clusters")):
+        for obj, target in (("lnD50", "$\\ln D_{50}$"), ("sobreestimacion", "Overestimation"), ("error_orden", "Rank error")):
+            e = R["correlaciones"][f"{d}|{obj}"]
+            ci = e["ic95"]
+            raw = f"{e['spearman']:+.2f} ({ci[0]:+.2f}, {ci[1]:+.2f})"
+            if "parcial_sin_lnD50" in e:
+                lo, hi = e["parcial_ic95"]
+                part = f"{e['parcial_sin_lnD50']:+.2f} ({lo:+.2f}, {hi:+.2f})"
+            else: part = "--"
+            fh.write(f"{label} & {target} & {raw} & {part} \\\\\n")
     fh.write("\\bottomrule\n\\end{tabular}\n")

@@ -67,6 +67,7 @@ if os.path.exists("resultados/incertidumbre.json"):                      # gener
     U = json.load(open("resultados/incertidumbre.json"))
     for col, nom in (("D_extremos", "RepEnd"), ("D_medio", "RepAvg")):
         Q = U["replicas"][col]
+        M[f"{nom}Icc"] = f2(Q["fiabilidad"])
         M[f"{nom}IccLo"], M[f"{nom}IccHi"] = (f2(v) for v in Q["fiabilidad_ic95"])
         M[f"{nom}IccSub"] = f2(Q["icc1_subconjunto"]); M[f"{nom}IccSubLo"], M[f"{nom}IccSubHi"] = (f2(v) for v in Q["icc1_subconjunto_ic95"])
         M[f"{nom}PairFactor"] = f2(Q["factor_diferencia_1sd"]); M[f"{nom}PairFactorNinetyFive"] = f2(Q["factor_diferencia_95"])

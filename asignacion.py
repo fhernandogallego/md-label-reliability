@@ -4,8 +4,8 @@ Une la prueba de viabilidad de M. (antes exploracion/asignacion.py: modelo poste
 successive halving, criterio de frontera p·(1−p), forma empírica) con la de F. (lectura del ruido medido, comprobación de
 gaussianidad, top 10 %, presupuesto equivalente, tabla/macros/figura para el manuscrito).
 
-Problema: cribado de los N = 6.137 candidatos con corridas cortas ruidosas; objetivo, los k mejores (mayor difusividad del
-Li). Presupuesto medio b corridas por candidato. Estrategias:
+Problema: cribado de N sistemas originales con corridas cortas ruidosas; objetivo, los k mejores según
+la etiqueta media esperada de 5 ns, no la difusividad de equilibrio. Presupuesto medio b corridas por candidato. Estrategias:
   uniforme   b corridas a cada candidato (b entero)
   mitades    successive halving: 1 corrida a todos; después otra a los mejores 4k, 2k, k, y al llegar a k se empieza
              una nueva ronda desde 4k, hasta agotar el presupuesto (sin el reinicio se gastaría todo en los mismos k)
@@ -26,6 +26,7 @@ Uso: python asignacion.py → resultados/asignacion.json, resultados/asignacion_
      python asignacion.py extra    solo las comprobaciones (lee la simulación principal del JSON; ~15 min)
      python asignacion.py tablas   solo tablas, macros y figura a partir de los dos JSON
 """
+from comun import originales_cribado
 import json, sys
 import numpy as np
 import pandas as pd
@@ -43,8 +44,10 @@ plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.righ
                      "lines.linewidth": 2.0, "figure.dpi": 150, "savefig.bbox": "tight", "pdf.fonttype": 42})
 
 T = json.load(open("resultados/techo.json")); U = json.load(open("resultados/incertidumbre.json"))["replicas"]
-cortas = pd.read_csv("resultados/tabla_por_trayectoria.csv").query("ns == 5").sort_values("id")
-N = len(cortas)
+tabla = pd.read_csv("resultados/tabla_por_trayectoria.csv")
+cortas = tabla.query("ns == 5").sort_values("id")
+poblacion = originales_cribado(tabla)
+N = len(poblacion)
 
 
 def modelo(est):
@@ -60,7 +63,7 @@ def sigma(m, M, homo=False):
 
 def verdaderos(est, M, forma, rng):
     if forma == "normal": return rng.normal(0, M["s_sis"], N)
-    x = np.log(cortas[est].values); x = (x - x.mean()) / x.std()
+    x = np.log(poblacion[est].values); x = (x - x.mean()) / x.std()
     return rng.choice(x, N, replace=True) * M["s_sis"]
 
 
@@ -170,7 +173,14 @@ def igualar(recalls, Bs, meta):
     return float(np.interp(meta, fr, Bs)) if meta <= fr[-1] else None
 
 
-if SOLO_EXTRA: R = json.load(open("resultados/asignacion.json"))
+if SOLO_EXTRA:
+    R = json.load(open("resultados/asignacion.json"))
+    if R["N"] != N:
+        raise ValueError("Las campañas guardadas usan otra población; ejecutar sin 'tablas'")
+    for estimador in ("D_extremos", "D_medio"):
+        actual = modelo(estimador)
+        if any(not np.isclose(R[f"modelo_{estimador}"][key], value) for key, value in actual.items()):
+            raise ValueError("Las campañas guardadas usan otra calibración de ruido; ejecutar sin 'tablas'")
 # presupuesto que necesita la frontera para igualar a 2, 3 y 4 réplicas uniformes
 R["equivalencia"] = {}
 for est in ("D_extremos", "D_medio"):
@@ -186,7 +196,7 @@ if not SOLO_EXTRA: json.dump(R, open("resultados/asignacion.json", "w"), indent=
 
 # ---------- Comprobaciones (caso principal) ----------
 #  1) error Monte Carlo de cada recall (ee = sd/√n_mc, ya guardado con cada resultado);
-#  2) fiabilidad mal estimada: las corridas siguen el modelo medido (r = 0,47), pero quien planifica y selecciona usa los
+#  2) fiabilidad mal estimada: las corridas siguen el modelo medido, pero quien planifica y selecciona usa los
 #     extremos del IC 95 % de r. Se mantiene la dispersión total observada: σ_run² = (1−r)·σ_tot², σ_sis² = r·σ_tot², y la
 #     pendiente con la movilidad se escala con σ_run. La uniforme no cambia (con el mismo n, el orden es el de las medias);
 #  3) re-cribado en dos etapas, la referencia sencilla: una corrida a todos y el resto a una lista corta fija de los mejores
@@ -291,6 +301,11 @@ for e2, b2, top2, ne in (("D_extremos", 1.25, 0.01, "TopOneBOneQuarterEnd"), ("D
     M[f"alHalving{ne}"] = pc(rec(e2, "normal", top2, "mitades", b2)); M[f"alBound{ne}"] = pc(rec(e2, "normal", top2, "frontera", b2))
 # comprobaciones: error Monte Carlo, fiabilidad mal estimada y dos etapas
 sx = lambda v: f"{v:.1f}" if v else "n/a"
+def errores_mc(obj):
+    if not isinstance(obj, dict): return []
+    return ([obj["ee"]] if "ee" in obj else []) + [ee for v in obj.values() for ee in errores_mc(v)]
+checks_ee = errores_mc(X["mal_estimada"]) + errores_mc(X["dos_etapas"])
+M["alMCErrChecksMax"] = f"{np.ceil(1000 * max(checks_ee)) / 10:.1f}"
 M["alMCErrMax"] = f"{100 * X['ee_max']:.1f}"; M["alMCErrMed"] = f"{100 * X['ee_mediana']:.1f}"
 r_lo, r_hi = U[est0]["fiabilidad_ic95"]; M["alRelPlanLo"], M["alRelPlanHi"] = f2(r_lo), f2(r_hi); M["alRelTrue"] = f2(M0["fiabilidad"])
 for top, nt in ((0.01, "One"), (0.05, "Five"), (0.10, "Ten")):
@@ -320,16 +335,28 @@ with open("paper/numeros_asignacion.tex", "w") as fh:
     fh.write("% Generado por asignacion.py a partir de resultados/asignacion.json. No editar a mano.\n")
     for kk, v in M.items(): fh.write(f"\\newcommand{{\\{kk}}}{{{v}}}\n")
 
-fig, axs = plt.subplots(1, 3, figsize=(7.4, 2.7), sharey=True)
+fig, axs = plt.subplots(1, 3, figsize=(8.0, 3.1), sharey=True)
 for ax, top in zip(axs, TOPS):
     for nombre, color in (("uniforme", NARANJA), ("mitades", VERDE), ("frontera", AZUL)):
         xs = [b for b in PRESUPUESTOS if rec(est, forma, top, nombre, b) is not None]
-        ax.plot(xs, [100 * rec(est, forma, top, nombre, b) for b in xs], color=color, marker="o", ms=3, label=NOM[nombre])
+        ys = np.array([100 * rec(est, forma, top, nombre, b) for b in xs])
+        se = np.array([100 * R["resultados"][f"{est}|{forma}|{top}|{'uniforme' if b == 1.0 else nombre}|{b}"]["ee"] for b in xs])
+        ax.plot(xs, ys, color=color, marker="o", ms=3, label=NOM[nombre])
+        ax.fill_between(xs, ys - 1.96 * se, ys + 1.96 * se, color=color, alpha=.15, lw=0)
+    e = X["dos_etapas"][str(top)]
+    xs = [1.0] + B_EXTRA
+    ys = [100 * rec(est, forma, top, "uniforme", 1.0)] + [100 * e[f"4k|{b}"]["recall"] for b in B_EXTRA]
+    se = [100 * R["resultados"][f"{est}|{forma}|{top}|uniforme|1.0"]["ee"]] + [100 * e[f"4k|{b}"]["ee"] for b in B_EXTRA]
+    ax.plot(xs, ys, color=TINTA2, ls="--", marker="s", ms=2.5, label="Two-stage (4k shortlist)")
+    ax.fill_between(xs, np.array(ys) - 1.96*np.array(se), np.array(ys) + 1.96*np.array(se), color=TINTA2, alpha=.1, lw=0)
+    eq = R["equivalencia"][f"{est}|{forma}|{top}|4"]
+    ax.plot(eq["presupuesto_frontera"],100*eq["recall_uniforme"],marker="*",ms=9,color=AZUL,zorder=4)
+    ax.plot([eq["presupuesto_frontera"],4],[100*eq["recall_uniforme"]]*2,color=TINTA2,ls=":",lw=.8)
     ax.set_xscale("log"); ax.set_xticks([1, 2, 4, 6]); ax.set_xticklabels(["1", "2", "4", "6"]); ax.xaxis.set_minor_formatter(plt.NullFormatter())
-    ax.set_title(f"Top {100 * top:.0f}% of {N:,} candidates", fontsize=8.5); ax.set_xlabel("Mean 5 ns runs per candidate")
-axs[0].set_ylabel("Recall of the true top set (%)")
-fig.legend(*axs[0].get_legend_handles_labels(), frameon=False, loc="lower center", bbox_to_anchor=(0.5, 0.98), ncol=3, fontsize=8)
-fig.tight_layout(); fig.savefig("paper/figures/fig8_allocation.pdf"); fig.savefig("paper/figures/fig8_allocation.png"); plt.close(fig)
+    ax.set_title(f"Top {100 * top:.0f}% of {N:,} candidates", fontsize=8.5); ax.set_xlabel("Mean new-structure runs")
+axs[0].set_ylabel("Recall of expected-label top set (%)")
+fig.legend(*axs[0].get_legend_handles_labels(), frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=8)
+fig.tight_layout(rect=(0,0,1,.83)); fig.savefig("paper/figures/fig8_allocation.pdf"); fig.savefig("paper/figures/fig8_allocation.png"); plt.close(fig)
 
 print(f"\ngaussianidad de las réplicas: curtosis {G['curtosis_exceso']:.2f}, Shapiro p {G['shapiro_p']:.2f}")
 for clave, q in R["equivalencia"].items():

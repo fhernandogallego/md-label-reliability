@@ -1,0 +1,51 @@
+{
+  "population": "one original label per screening system",
+  "n_population": 6003,
+  "nominal_folder_size": 100,
+  "available_new_configurations": 95,
+  "paired_systems": 94,
+  "new_configurations_without_original": [
+    "9-0-489993648-0"
+  ],
+  "screening_long_systems": 96,
+  "replicated_with_long": 92,
+  "descriptors": [
+    {
+      "descriptor": "heavy_atoms",
+      "replicated_median": 14.0,
+      "rest_median": 14.0,
+      "standardized_mean_difference": -0.07147965328275527
+    },
+    {
+      "descriptor": "oxygen",
+      "replicated_median": 3.0,
+      "rest_median": 3.0,
+      "standardized_mean_difference": -0.12949596664846547
+    },
+    {
+      "descriptor": "nitrogen",
+      "replicated_median": 1.0,
+      "rest_median": 1.0,
+      "standardized_mean_difference": 0.12045164564726185
+    },
+    {
+      "descriptor": "fluorine",
+      "replicated_median": 0.0,
+      "rest_median": 0.0,
+      "standardized_mean_difference": 0.07602032880635472
+    },
+    {
+      "descriptor": "rings",
+      "replicated_median": 0.0,
+      "rest_median": 0.0,
+      "standardized_mean_difference": null
+    },
+    {
+      "descriptor": "ln_D5",
+      "replicated_median": -1.8274531473056086,
+      "rest_median": -1.8745611030995668,
+      "standardized_mean_difference": 0.05371551714604691
+    }
+  ],
+  "availability_note": "The released index contains 95 new-configuration trajectories in the rand_100 folder. One lacks an original run; the index does not explain the other five nominal entries."
+}

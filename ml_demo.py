@@ -6,7 +6,7 @@ Modelo: random forest sobre la huella Morgan (radio 2, 2048 bits con recuento) d
 SISTEMA: todas las predicciones son fuera de muestra.
 Preguntas:
   1. Correlación (Pearson, ln D) de la predicción con una etiqueta de 5 ns, frente al techo √r de techo.py; la correlación
-     implícita con la propiedad del sistema es r_obs/√r.
+     se compara con un techo incierto, sin inferir saturación.
   2. En los sistemas replicados: correlación con la etiqueta de cada corrida y con la media de las dos; el modelo de medida
      predice que la segunda es mayor en un factor √(r₂/r), con r₂ la fiabilidad de la media de dos corridas.
   3. En los sistemas con corrida de 50 ns: ¿ordena el modelo la referencia larga mejor que la propia corrida corta del
@@ -18,6 +18,7 @@ Preguntas:
 Intervalos: bootstrap por sistemas (2000 remuestreos). Necesita rdkit y scikit-learn (entorno .venv del proyecto).
 Uso: .venv/bin/python ml_demo.py → resultados/ml_demo.json, paper/numeros_ml.tex, paper/tabla_ml.tex
 """
+from comun import originales_cribado
 import json
 import numpy as np
 import pandas as pd
@@ -50,12 +51,13 @@ def huella(smi):
     return cache[smi]
 
 
-cortas = T[T.ns == 5].sort_values("id").copy()
+todas_cortas = T[T.ns == 5].sort_values("id").copy()
+cortas = todas_cortas[~todas_cortas.literatura].copy()
 cortas["X"] = cortas.mol_smiles.map(huella)
 fallos = int(cortas.X.isna().sum()); cortas = cortas[cortas.X.notna()]
 cortas["y"] = np.log(cortas.D_extremos)
 cortas["original"] = ~cortas.carpeta.str.contains("new_config", na=False)
-sis = cortas[cortas.original].drop_duplicates("sistema").set_index("sistema")      # un sistema = su corrida original
+sis = originales_cribado(cortas).set_index("sistema")      # un sistema = su corrida original
 R = {"n_sistemas": len(sis), "n_trayectorias": len(cortas), "fallos_smiles": fallos, "fiabilidad": r1, "fiabilidad_2rep": r2,
      "techo_correlacion": float(np.sqrt(r1)), "particiones": N_PART}
 
@@ -84,8 +86,7 @@ X = np.stack(sis.X.values); y = sis.y.values
 pred = pd.Series(fuera_de_muestra(X, y, np.arange(len(y))), index=sis.index)
 c, ci = r_ic(pred.values, y)
 R["todas"] = {"pearson": c, "pearson_ic95": ci, "r2": float(1 - np.mean((pred.values - y) ** 2) / np.var(y)),
-              "fraccion_del_techo": c / np.sqrt(r1), "correlacion_implicita_con_propiedad": c / np.sqrt(r1),
-              "correlacion_implicita_ic95": [v / np.sqrt(r1) for v in ci]}
+              "fraccion_del_techo": c / np.sqrt(r1)}
 
 # ---------- 2) Sistemas replicados: una etiqueta frente a la media de dos ----------
 rep = cortas.groupby("sistema").filter(lambda g: len(g) == 2)
@@ -104,8 +105,14 @@ R["replicados"]["ganancia_media_ic95"] = [float(np.quantile(boot, .025)), float(
 
 # ---------- 3) Referencia larga: modelo frente a la propia corrida corta ----------
 L = T[T.ns == 50].set_index("sistema")
-s3 = [s for s in L.index if s in pred.index]
-ref = np.log(L.loc[s3, "D_medio"].values); corta = sis.loc[s3, "y"].values; pm = pred[s3].values; lit = L.loc[s3, "literatura"].values.astype(bool)
+# Literatura: evaluación externa; estos sistemas nunca entran en entrenamiento.
+lit_orig = todas_cortas[todas_cortas.literatura & ~todas_cortas.carpeta.str.contains("new_config", na=False)].drop_duplicates("sistema").set_index("sistema")
+pred_long = pred.copy()
+if len(lit_orig):
+    pred_long = pd.concat([pred, pd.Series(modelo().fit(X, y).predict(np.stack(lit_orig.mol_smiles.map(huella))), index=lit_orig.index)])
+orig_long = pd.concat([sis.y, np.log(lit_orig.D_extremos)])
+s3 = [s for s in L.index if s in pred_long.index]
+ref = np.log(L.loc[s3, "D_medio"].values); corta = orig_long.loc[s3].values; pm = pred_long[s3].values; lit = L.loc[s3, "literatura"].values.astype(bool)
 R["larga"] = {"n": len(s3)}
 for nombre, sel in (("todos", np.ones(len(s3), bool)), ("cribado", ~lit), ("literatura", lit)):
     e = {"n": int(sel.sum())}
@@ -181,8 +188,6 @@ f2 = lambda v: f"{v:.2f}"
 M = {"mlNSys": f"{R['n_sistemas']:,}".replace(",", "{,}"), "mlFolds": str(N_PART),
      "mlCorr": f2(R["todas"]["pearson"]), "mlCorrLo": f2(R["todas"]["pearson_ic95"][0]), "mlCorrHi": f2(R["todas"]["pearson_ic95"][1]),
      "mlRTwo": f2(R["todas"]["r2"]), "mlFracCeilPct": f"{100 * R['todas']['fraccion_del_techo']:.0f}",
-     "mlImplied": f2(R["todas"]["correlacion_implicita_con_propiedad"]),
-     "mlImpliedLo": f2(R["todas"]["correlacion_implicita_ic95"][0]), "mlImpliedHi": f2(min(R["todas"]["correlacion_implicita_ic95"][1], 1)),
      "mlRepN": str(R["replicados"]["n"]), "mlRepA": f2(R["replicados"]["pearson_A"]), "mlRepB": f2(R["replicados"]["pearson_B"]),
      "mlRepMean": f2(R["replicados"]["pearson_media"]), "mlRepMeanExp": f2(R["replicados"]["media_esperada_por_el_modelo_de_medida"]),
      "mlRepGainLo": f2(R["replicados"]["ganancia_media_ic95"][0]), "mlRepGainHi": f2(R["replicados"]["ganancia_media_ic95"][1]),
@@ -211,20 +216,19 @@ sb = lambda r: float(np.sqrt(2 * r / (1 + r)))                             # tec
 rlo, rhi = (v ** 2 for v in (lo1, hi1))
 techo1 = f"{f2(np.sqrt(r1))} ({f2(lo1)} to {f2(hi1)})"; techo2 = f"{f2(np.sqrt(r2))} ({f2(sb(rlo))} to {f2(sb(rhi))})"
 with open("paper/tabla_ml.tex", "w") as fh:
-    fh.write("% Generado por ml_demo.py. No editar a mano.\n\\begin{tabular}{lrrr}\n\\toprule\n"
-             "Target of the out-of-sample prediction & Systems & Pearson $r$ (95\\% CI) & Ceiling (95\\% CI) \\\\\n\\midrule\n")
-    fh.write(f"One 5 ns label, all systems & {M['mlNSys']} & {M['mlCorr']} ({M['mlCorrLo']} to {M['mlCorrHi']}) & {techo1} \\\\\n")
+    fh.write("% Generado por ml_demo.py. No editar a mano.\n\\begin{tabular}{p{0.33\\textwidth}rrr}\n\\toprule\n"
+             "Evaluation target & Systems & Pearson $r$ (95\\% CI) & Ceiling (95\\% CI) \\\\\n\\midrule\n")
+    fh.write(f"One label, system split & {M['mlNSys']} & {M['mlCorr']} ({M['mlCorrLo']} to {M['mlCorrHi']}) & {techo1} \\\\\n")
     for nn, txt in (("Fine", "fine"), ("Coarse", "coarse")):
-        fh.write(f"\\quad split by {txt} chemical family (Tanimoto $\\geq$ {M[f'mlFam{nn}Sim']}) & {M['mlNSys']} & {M[f'mlFam{nn}Corr']} "
+        fh.write(f"{txt.capitalize()} families (Tanimoto $\\geq$ {M[f'mlFam{nn}Sim']}) & {M['mlNSys']} & {M[f'mlFam{nn}Corr']} "
                  f"({M[f'mlFam{nn}CorrLo']} to {M[f'mlFam{nn}CorrHi']}) & {techo1} \\\\\n")
-    fh.write(f"One 5 ns label (first / second run), replicated systems & {M['mlRepN']} & {M['mlRepA']} / {M['mlRepB']} & {techo1} \\\\\n")
+    fh.write(f"Replicas, first / second & {M['mlRepN']} & {M['mlRepA']} / {M['mlRepB']} & {techo1} \\\\\n")
     lo, hi = R["replicados"]["pearson_media_ic95"]
-    fh.write(f"Mean of two 5 ns labels, replicated systems & {M['mlRepN']} & {M['mlRepMean']} ({f2(lo)} to {f2(hi)}) & {techo2} \\\\\n")
+    fh.write(f"Mean of two replicas & {M['mlRepN']} & {M['mlRepMean']} ({f2(lo)} to {f2(hi)}) & {techo2} \\\\\n")
     fh.write("\\bottomrule\n\\end{tabular}\n")
 
 print(f"sistemas {R['n_sistemas']} (fallos de SMILES {fallos}); techo √r = {np.sqrt(r1):.2f}")
-print(f"1) todas: Pearson {c:.2f} {[round(v, 2) for v in ci]}, R² {R['todas']['r2']:.2f}, {100 * R['todas']['fraccion_del_techo']:.0f} % del techo; "
-      f"correlación implícita con la propiedad {R['todas']['correlacion_implicita_con_propiedad']:.2f}")
+print(f"1) todas: Pearson {c:.2f} {[round(v, 2) for v in ci]}, R² {R['todas']['r2']:.2f}, {100 * R['todas']['fraccion_del_techo']:.0f} % del techo")
 Q = R["replicados"]
 print(f"2) replicados (n={Q['n']}): con A {Q['pearson_A']:.2f}, con B {Q['pearson_B']:.2f}, con la media {Q['pearson_media']:.2f} "
       f"(esperada {Q['media_esperada_por_el_modelo_de_medida']:.2f}); ganancia IC95 {[round(v, 2) for v in Q['ganancia_media_ic95']]}")

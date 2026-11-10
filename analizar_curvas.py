@@ -48,7 +48,13 @@ for f in glob.glob("data/curvas/*.json"):
                   "resid_extremos": np.log(m[-1]) - np.polyval(c, np.log(t[-1])),  # desviación del último punto respecto a la ley potencial
                   "msd_final": m[-1],
                   "D_tfsi_medio": np.interp(0.5 * t[-1], *curvas[(int(d["id"]), "tfsi")]) / (6 * 0.5 * t[-1])})
-T = pd.DataFrame(filas).sort_values("id")
+if filas:
+    T = pd.DataFrame(filas).sort_values("id")
+    anterior = pd.read_csv("resultados/tabla_por_trayectoria.csv") if os.path.exists("resultados/tabla_por_trayectoria.csv") else None
+    if anterior is not None and len(T) < len(anterior):
+        raise ValueError("Curvas incompletas: no se sobrescriben los resultados publicados con una descarga parcial")
+else:
+    T = pd.read_csv("resultados/tabla_por_trayectoria.csv").sort_values("id")
 c5, c50 = T[T.ns == 5], T[T.ns == 50]
 R = {"n_5ns": len(c5), "n_50ns": len(c50)}
 
@@ -60,6 +66,7 @@ for nombre, g in (("5ns", c5), ("50ns", c50)):
 fig, ax = plt.subplots(figsize=(3.4, 2.6))
 for g, col, lab in ((c5, AZUL, f"5 ns runs (n = {len(c5):,})"), (c50, NARANJA, f"50 ns runs (n = {len(c50)})")):
     x = np.sort(g.beta_medio.dropna()); ax.plot(x, np.arange(1, len(x) + 1) / len(x), color=col, label=lab)
+ax.axvline(0.9, color=VERDE, lw=0.8, ls=":", label="operational threshold 0.9")
 ax.axvline(1.0, color=TINTA2, lw=0.8, ls=(0, (3, 3))); ax.text(1.01, 0.04, "diffusive\n(β = 1)", color=TINTA2, fontsize=7.5, va="bottom")
 ax.set_xlabel("Effective MSD exponent β of Li$^+$ (lags 20 to 60% of run)"); ax.set_ylabel("Cumulative fraction of systems")
 ax.set_xlim(0, 1.3); ax.set_ylim(0, 1); ax.legend(frameon=False, loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2, fontsize=8, handlelength=1.4, columnspacing=1.2)
@@ -67,14 +74,17 @@ fig.savefig("paper/figures/fig1_exponent_ecdf.pdf"); fig.savefig("paper/figures/
 
 # ---------- 2. Simulaciones largas: D aparente frente al tiempo observado ----------
 rejilla = np.array([0.5, 1, 2, 3, 5, 7.5, 10, 15, 20, 25])
-Dapp = np.array([[np.interp(tau, *curvas[(i, "li")]) / (6 * tau) for tau in rejilla] for i in c50.id])
-ref = Dapp[:, -1]                                                      # referencia: retardo de 25 ns (mitad de la simulación larga)
-razon = Dapp / ref[:, None]
-rho = [stats.spearmanr(Dapp[:, j], ref)[0] for j in range(len(rejilla))]
-R["largas"] = {"retardos_ns": rejilla.tolist(),
-               "razon_mediana": np.median(razon, 0).tolist(), "razon_p10": np.quantile(razon, .1, 0).tolist(), "razon_p90": np.quantile(razon, .9, 0).tolist(),
-               "spearman_vs_25ns": [float(x) for x in rho],
-               "frac_dentro_25pct": [float((np.abs(razon[:, j] - 1) <= 0.25).mean()) for j in range(len(rejilla))]}
+if curvas:
+    Dapp = np.array([[np.interp(tau, *curvas[(i, "li")]) / (6 * tau) for tau in rejilla] for i in c50.id])
+    ref = Dapp[:, -1]                                                      # referencia: retardo de 25 ns (mitad de la simulación larga)
+    razon = Dapp / ref[:, None]
+    rho = [stats.spearmanr(Dapp[:, j], ref)[0] for j in range(len(rejilla))]
+    R["largas"] = {"retardos_ns": rejilla.tolist(),
+                   "razon_mediana": np.median(razon, 0).tolist(), "razon_p10": np.quantile(razon, .1, 0).tolist(), "razon_p90": np.quantile(razon, .9, 0).tolist(),
+                   "spearman_vs_25ns": [float(x) for x in rho],
+                   "frac_dentro_25pct": [float((np.abs(razon[:, j] - 1) <= 0.25).mean()) for j in range(len(rejilla))]}
+else:
+    R["largas"] = json.load(open("resultados/preliminar.json"))["largas"]
 fig, axs = plt.subplots(1, 2, figsize=(7.0, 2.7))
 ax = axs[0]
 G = R["largas"]                                                        # la figura sale de los valores guardados (se puede redibujar sin data/)
@@ -112,6 +122,7 @@ if len(ru) >= 0.99 * len(T):                                           # solo co
     ru["sistema"] = ru.ruta.str.split("/").str[-2]                     # identificador del sistema (p. ej. 9-0-1119513647-0 o PSBDC)
     T = T.merge(ru[["id", "tanda", "carpeta", "sistema"]], on="id", how="left")
     T["literatura"] = T.carpeta.str.startswith("literature")
+if "sistema" in T.columns:
     R["conjuntos"] = {"largas_literatura": int(((T.ns == 50) & T.literatura).sum()), "largas_cribado": int(((T.ns == 50) & ~T.literatura).sum()),
                       "cortas_literatura": int(((T.ns == 5) & T.literatura).sum()), "cortas_cribado": int(((T.ns == 5) & ~T.literatura).sum())}
     cortas = T[T.ns == 5].sort_values("id")
@@ -131,7 +142,10 @@ if len(ru) >= 0.99 * len(T):                                           # solo co
         for col in ("D5_extremos", "D5_medio"):
             R["pares"][col]["recall_top20"] = float(len(mejores & set(P[col].nlargest(k).index)) / k)
         fig, ax = plt.subplots(figsize=(3.4, 3.0))
-        ax.scatter(P.D50_medio, P.D5_extremos, s=14, color=AZUL, edgecolor="#fcfcfb", lw=0.5)
+        lit = T[T.ns == 50].set_index("sistema").loc[P.index, "literatura"]
+        for sel, color, label in ((~lit, AZUL, "Screening"), (lit, NARANJA, "Literature")):
+            ax.scatter(P.loc[sel, "D50_medio"], P.loc[sel, "D5_extremos"], s=16, color=color, label=label, edgecolor="#fcfcfb", lw=0.5)
+        ax.legend(frameon=False, fontsize=8)
         lim = [min(P.D50_medio.min(), P.D5_extremos.min()) * 0.7, max(P.D50_medio.max(), P.D5_extremos.max()) * 1.4]
         ax.plot(lim, lim, color=TINTA2, lw=0.8, ls=(0, (3, 3))); ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lim); ax.set_ylim(lim)
         ax.set_xlabel("$D_{app}$, 50 ns run at lag 25 ns (Å$^2$/ns)"); ax.set_ylabel("End-point $D_{app}$, 5 ns run (Å$^2$/ns)")
@@ -152,6 +166,7 @@ if len(ru) >= 0.99 * len(T):                                           # solo co
                 R["replicas"][col].update({"sd_log_entre_corridas_todas": float(total), "sd_log_subconjunto": float(np.log(rep.groupby("sistema")[col].mean()).std()),
                                            "fiabilidad_icc": float(1 - ruido ** 2 / total ** 2)})
         R["replicas"]["sd_log_largas"] = float(np.log(T[T.ns == 50].D_medio).std())
-T.to_csv("resultados/tabla_por_trayectoria.csv", index=False)
+if curvas:
+    T.to_csv("resultados/tabla_por_trayectoria.csv", index=False)
 json.dump(R, open("resultados/preliminar.json", "w"), indent=1, default=float)
 print(json.dumps(R, indent=1, default=float))

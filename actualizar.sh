@@ -1,29 +1,75 @@
 #!/bin/bash
-# Recalcula todo con los datos que haya en ese momento y regenera tablas, figuras y cifras del manuscrito.
-# Uso: ./actualizar.sh        (se puede ejecutar mientras la extracción sigue en marcha: analiza solo lo nuevo)
-set -e; cd "$(dirname "$0")"
-for p in .venv/bin/python ../../.venv/bin/python; do
-  if [ -x "$p" ]; then PY="$p"; break; fi
+# Regenera resultados desde entradas compactas/cachés; con data/ también procesa curvas completas.
+set -euo pipefail
+cd "$(dirname "$0")"
+if [[ -n "${HTPMD_PYTHON:-}" ]]; then
+  PY="$HTPMD_PYTHON"
+elif [[ -x .venv/bin/python ]]; then
+  PY=.venv/bin/python
+else
+  PY=python3
+fi
+REUSE_CAMPAIGNS=0
+WITHOUT_CONDUCTIVITY=0
+for arg in "$@"; do
+  case "$arg" in
+    --reuse-campaigns) REUSE_CAMPAIGNS=1 ;;
+    --sin-conductividad) WITHOUT_CONDUCTIVITY=1 ;;
+    *) echo "Uso: ./actualizar.sh [--reuse-campaigns] [--sin-conductividad]" >&2; exit 2 ;;
+  esac
 done
-PY="${PY:-python3}"
-$PY analizar_curvas.py > /dev/null 2>&1 && echo "curvas, pares y réplicas: ok"
-$PY sensibilidad.py > /dev/null 2>&1 && echo "sensibilidad: ok"
-$PY incertidumbre.py > /dev/null 2>&1 && echo "intervalos y selección: ok"
-$PY analizar_prefijos.py 2>/dev/null | grep -E "trayectorias de 50 ns|validación|deriva" || true
-$PY segmentos.py 2>/dev/null | grep -E "trayectorias de 50 ns|sin datos" || true    # segmentos consecutivos de 5 ns (necesita data/iones o las cachés)
-$PY ralentizacion.py 2>/dev/null | head -1 || true                       # qué cambia durante la ralentización (agrega resultados/ralentizacion/; calcular: --calcular)
-$PY solvatacion.py > /dev/null 2>&1 && echo "solvatación del Li y agregación iónica: ok"   # cachés en resultados/solvatacion/ (calcular: necesita data/iones)
-$PY referencias.py 2>/dev/null | grep -E "trayectorias|acotada" || true          # ~4 min: sensibilidad a la referencia (apéndice)
-$PY frontera.py > /dev/null 2>&1 && echo "frontera coste-error: ok"
-$PY techo.py > /dev/null 2>&1 && echo "techo de ruido: ok"             # después de incertidumbre.py y analizar_prefijos.py
-$PY asignacion.py > /dev/null 2>&1 && echo "asignación adaptativa: ok"   # ~3 min; después de techo.py
-$PY validacion_asignacion.py > /dev/null 2>&1 && echo "validación real de la asignación: ok"
-$PY ml_demo.py > /dev/null 2>&1 && echo "demostración de aprendizaje automático: ok"   # ~1 min; necesita rdkit (requirements.txt)
-$PY generalidad.py > /dev/null 2>&1 && echo "generalidad (anión TFSI y conductividad): ok"   # ~1 min; necesita rdkit
-$PY toc.py > /dev/null 2>&1 && echo "gráfico de la tabla de contenidos: ok"
-$PY hacer_numeros.py | head -1
-if command -v pdflatex >/dev/null; then   # si.tex antes que jcs.tex: el manuscrito toma de si.aux las referencias S (xr)
-  (cd paper && pdflatex -interaction=batchmode si && pdflatex -interaction=batchmode si \
-     && pdflatex -interaction=batchmode jcs && bibtex jcs && pdflatex -interaction=batchmode jcs && pdflatex -interaction=batchmode jcs) > /dev/null \
-     && echo "PDF regenerado (paper/jcs.pdf y paper/si.pdf)"
-else echo "Sin pdflatex en este equipo: las cifras y tablas están actualizadas; falta compilar paper/si.tex y paper/jcs.tex (p. ej. en Overleaf)."; fi
+LOG_DIR="${HTPMD_LOG_DIR:-${TMPDIR:-/tmp}/md-label-reliability-logs}"
+mkdir -p "$LOG_DIR"
+export MPLCONFIGDIR="${MPLCONFIGDIR:-$LOG_DIR/matplotlib}"
+run() {
+  local script="$1"
+  shift
+  echo "Ejecutando $script"
+  if ! "$PY" "$script" "$@" > "$LOG_DIR/${script%.py}.log" 2>&1; then
+    cat "$LOG_DIR/${script%.py}.log" >&2
+    return 1
+  fi
+}
+if [[ $WITHOUT_CONDUCTIVITY -eq 0 && ! -f resultados/conductividad.csv ]]; then
+  if [[ -f data/molality-vs-conductivity.csv ]]; then
+    run importar_conductividad.py data/molality-vs-conductivity.csv
+  else
+    echo "Falta la entrada de conductividad. Ejecuta importar_conductividad.py /ruta/al/export.csv." >&2
+    echo "Para un borrador parcial explícito: ./actualizar.sh --sin-conductividad" >&2
+    exit 1
+  fi
+fi
+run analizar_curvas.py
+run sensibilidad.py
+run incertidumbre.py
+run analizar_prefijos.py
+run segmentos.py
+run ralentizacion.py
+run solvatacion.py
+run referencias.py
+run frontera.py
+run techo.py
+run auditoria_muestra.py
+if [[ $REUSE_CAMPAIGNS -eq 1 ]]; then run asignacion.py tablas; else run asignacion.py; fi
+run validacion_asignacion.py
+run ml_demo.py
+if [[ $WITHOUT_CONDUCTIVITY -eq 1 ]]; then run generalidad.py --sin-conductividad; else run generalidad.py; fi
+run figuras_diagnostico.py
+run toc.py
+run hacer_numeros.py
+if [[ $WITHOUT_CONDUCTIVITY -eq 1 ]]; then run verificar_resultados.py --sin-conductividad; else run verificar_resultados.py; fi
+if command -v pdflatex >/dev/null; then
+  (
+    cd paper
+    pdflatex -halt-on-error -interaction=batchmode si
+    pdflatex -halt-on-error -interaction=batchmode si
+    pdflatex -halt-on-error -interaction=batchmode jcs
+    bibtex jcs
+    pdflatex -halt-on-error -interaction=batchmode jcs
+    pdflatex -halt-on-error -interaction=batchmode jcs
+  ) > "$LOG_DIR/latex.log" 2>&1 || { cat "$LOG_DIR/latex.log" >&2; exit 1; }
+  echo "PDF regenerados: paper/jcs.pdf y paper/si.pdf"
+else
+  echo "Análisis completo. Falta pdflatex para compilar los PDF." >&2
+fi
+echo "Reproducción completada. Logs: $LOG_DIR"

@@ -3,15 +3,15 @@
 Lee resultados/tabla_por_trayectoria.csv (generada por analizar_curvas.py), así que no necesita data/.
 Todo en escala logarítmica, ln D. Modelo de medida: etiqueta = valor del sistema + ruido de la corrida (σ_run, de las réplicas).
   - Techo: un predictor perfecto del valor del sistema correlaciona con UNA etiqueta de 5 ns como mucho √r (Pearson) y explica
-    como mucho R² = r, con r la fiabilidad de una corrida (misma definición que el texto: 1 − σ_run²/σ_tot²).
+    como mucho R² = r en la población bajo ruido de evaluación independiente, con r la fiabilidad de una corrida (misma definición que el texto: 1 − σ_run²/σ_tot²).
   - Heterocedasticidad: ¿depende el ruido de la movilidad? (|diferencia entre réplicas| frente al nivel medio).
   - Spearman–Brown: fiabilidad de la media de n réplicas, r_n = n·r / (1 + (n−1)·r), y réplicas necesarias para r ≥ 0,8.
   - Origen del ruido: las réplicas parten de estructuras amorfas distintas (ruido de estructura + de dinámica), mientras que la
     corrida de 5 ns de un par y los primeros 5 ns de su corrida larga parten de la MISMA estructura inicial (Xie et al. 2022:
-    "computed from the same random initial structures"; aquí se comprueba: razón mediana 1,00). Su diferencia mide solo el
-    ruido de dinámica, y σ_estructura² = σ_run² − σ_dinámica². Por la misma razón los pares NO son independientes y no se
+    "computed from the same random initial structures"; las etiquetas tienen razón mediana 1,00). Su diferencia estima el
+    ruido de dinámica si las realizaciones son independientes; un historial compartido lo subestimaría, y σ_estructura² = σ_run² − σ_dinámica². Por la misma razón los pares NO son independientes y no se
     corrige su correlación por fiabilidad.
-  - Recall máximo: simulación gaussiana con la varianza entre sistemas y el ruido medidos; proporción del verdadero top-k
+  - Recall simulado: simulación gaussiana con la varianza entre sistemas y el ruido medidos; proporción del verdadero top-k
     que recupera la selección por la media de n corridas de 5 ns (equivale al recall aparente de un modelo perfecto
     evaluado contra esas etiquetas).
 Intervalos: bootstrap por sistemas (réplicas, conjunto de cortas y pares remuestreados de forma independiente). σ_din sale de los 96
@@ -22,6 +22,7 @@ Representatividad: las réplicas son la tanda rand_100 (muestra aleatoria); KS y
 sistemas con larga frente al resto del cribado.
 Uso: python techo.py → resultados/techo.json, paper/tabla_techo.tex, paper/numeros_techo.tex
 """
+from comun import originales_cribado
 import glob, json
 import numpy as np
 import pandas as pd
@@ -33,6 +34,7 @@ TOPS = (0.05, 0.10, 0.20)
 rng = np.random.default_rng(SEMILLA)
 T = pd.read_csv("resultados/tabla_por_trayectoria.csv")
 cortas = T[T.ns == 5].sort_values("id")
+poblacion = originales_cribado(T)
 ic = lambda b: [float(np.nanquantile(b, .025)), float(np.nanquantile(b, .975))]
 rep = cortas.groupby("sistema").filter(lambda g: len(g) == 2).sort_values(["sistema", "id"])
 a = cortas.groupby("sistema").agg(D5_extremos=("D_extremos", "first"), D5_medio=("D_medio", "first"), literatura=("literatura", "first"))
@@ -45,7 +47,7 @@ L = T[T.ns == 50].set_index("sistema")
 P["pref_extremos"] = [pref[int(L.loc[s, "id"])]["extremos"] if int(L.loc[s, "id"]) in pref else np.nan for s in P.index]
 P["pref_medio"] = [pref[int(L.loc[s, "id"])]["mitad"] if int(L.loc[s, "id"]) in pref else np.nan for s in P.index]
 R = {"n_boot": N_BOOT, "n_sim": N_SIM, "semilla": SEMILLA, "n_replicados": int(rep.sistema.nunique()),
-     "n_pares_cribado": int((~P.literatura).sum()), "n_pares": len(P)}
+     "n_poblacion": len(poblacion), "poblacion": "original screening systems", "n_pares_cribado": int((~P.literatura).sum()), "n_pares": len(P)}
 
 
 def spearman_brown(r, n):
@@ -61,7 +63,7 @@ def recall_simulado(r, n, frac, rng):
 
 
 def medidas(x, y, todas, ps, pp):
-    """x, y: ln D de las dos réplicas; todas: ln D de todas las cortas; ps, pp: ln D de la corrida de 5 ns de cada par de
+    """x, y: ln D de las dos réplicas; todas: ln D de la población original de cribado; ps, pp: ln D de la corrida de 5 ns de cada par de
     cribado y de los primeros 5 ns de su corrida larga (misma estructura inicial)."""
     s_run = (x - y).std(ddof=1) / np.sqrt(2)
     r = 1 - s_run ** 2 / todas.var(ddof=1)
@@ -78,7 +80,7 @@ cribado = P[~P.literatura]
 for col, col_par, col_pref in (("D_extremos", "D5_extremos", "pref_extremos"), ("D_medio", "D5_medio", "pref_medio")):
     x = np.log(rep.groupby("sistema")[col].first().values); y = np.log(rep.groupby("sistema")[col].last().values)
     c = cribado.dropna(subset=[col_pref])
-    todas = np.log(cortas[col].values); ps = np.log(c[col_par].values); pp = np.log(c[col_pref].values)
+    todas = np.log(poblacion[col].values); ps = np.log(c[col_par].values); pp = np.log(c[col_pref].values)
     m = medidas(x, y, todas, ps, pp); boot = {k: [] for k in m}
     for _ in range(N_BOOT):
         i = rng.integers(0, len(x), len(x)); j = rng.integers(0, len(todas), len(todas)); p = rng.integers(0, len(ps), len(ps))
@@ -150,7 +152,7 @@ for col, col_par, col_pref in (("D_extremos", "D5_extremos", "pref_extremos"), (
           "sd_cribado_no_replicado": float(sin_rep.std(ddof=1)),
           # sin descontar el desplazamiento medio entre tandas (diferencias sin centrar)
           "sd_run_sin_centrar": float(np.sqrt(np.mean(dA ** 2) / 2)),
-          "fiabilidad_sin_centrar": float(1 - np.mean(dA ** 2) / 2 / np.log(cortas[col]).var(ddof=1))}
+          "fiabilidad_sin_centrar": float(1 - np.mean(dA ** 2) / 2 / np.log(poblacion[col]).var(ddof=1))}
     R[col]["separacion_conjunta"] = J; R[col]["tandas"] = L5
     # representatividad: las réplicas forman la tanda que el conjunto de datos llama rand_100 (muestra aleatoria de 100
     # sistemas de cribado); se compara la etiqueta original de esos sistemas, y la de los sistemas con corrida larga de
@@ -168,11 +170,11 @@ for col, col_par, col_pref in (("D_extremos", "D5_extremos", "pref_extremos"), (
 json.dump(R, open("resultados/techo.json", "w"), indent=1)
 
 f2 = lambda v: f"{v:.2f}"
-NOM = {"D_extremos": "End-point", "D_medio": "Origin-averaged, lag $T/2$"}
+NOM = {"D_extremos": "End-point", "D_medio": "Origin-averaged"}
 with open("paper/tabla_techo.tex", "w") as fh:
     fh.write("% Generado por techo.py. No editar a mano.\n\\begin{tabular}{lrrrrrr}\n\\toprule\n"
              " & & & & \\multicolumn{3}{c}{Recall of the true top} \\\\\n\\cmidrule(lr){5-7}\n"
-             "Label & Runs averaged & Reliability & Max.\\ correlation & 5\\% & 10\\% & 20\\% \\\\\n\\midrule\n")
+             "Label & Runs & Reliability & Ceiling & 5\\% & 10\\% & 20\\% \\\\\n\\midrule\n")
     for col in ("D_extremos", "D_medio"):
         e = R[col]
         for j, n in enumerate(REPLICAS):

@@ -5,13 +5,20 @@ import numpy as np
 SEMILLA_BOOT, N_BOOT = 20261014, 2000
 
 
+def originales_cribado(tabla):
+    """Una etiqueta original por sistema de cribado; excluye literatura y nuevas configuraciones."""
+    cortas = tabla[tabla.ns == 5].sort_values("id")
+    return cortas[(~cortas.literatura) &
+                  (~cortas.carpeta.str.contains("new_config", na=False))].drop_duplicates("sistema")
+
+
 def ic(b):
     """Intervalo percentil del 95 %."""
     return [float(np.quantile(b, .025)), float(np.quantile(b, .975))]
 
 
 def medidas_replicas(x, y, todas):
-    """x, y: ln D de las dos corridas de cada sistema replicado; todas: ln D de todas las corridas cortas.
+    """x, y: ln D de las dos corridas de cada sistema replicado; todas: ln D de la población de etiquetas que se evalúa.
     Ruido de una corrida, fiabilidad con la definición del texto (1 − σ_run²/σ_tot²) e ICC(1) dentro del subconjunto."""
     sd_run = (x - y).std(ddof=1) / np.sqrt(2)
     msb = 2 * np.var((x + y) / 2, ddof=1); msw = np.sum((x - y) ** 2) / (2 * len(x))    # ANOVA de una vía con 2 réplicas

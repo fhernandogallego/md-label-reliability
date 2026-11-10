@@ -178,15 +178,18 @@ def escribir_tex(R):
              ("Cluster", "Size of the cluster of a Li (ions)", "smaller"), ("Free", "Fraction of Li without anion", "larger"),
              ("Cn", "Anion N around each Li", "fewer")]
     with open("paper/tabla_ralentizacion.tex", "w") as fh:
-        fh.write("% Generado por ralentizacion.py. No editar a mano.\n\\begin{tabular}{lrrrrrr}\n\\toprule\n"
-                 "Quantity & First vs late (95\\% CI) & Late segments & Systems & Screening & Literature & "
-                 "$\\rho$ with Li slowdown (95\\% CI) \\\\\n\\midrule\n")
+        fh.write("\\textbf{Changes across all systems}\\par\\smallskip\n\\begin{tabular}{lrrr}\n\\toprule\nQuantity & First vs late (95\\% CI) & Late & Systems \\\\\n\\midrule\n")
         for n, etiqueta, sentido in filas:
+            etiqueta = etiqueta.replace("Potential energy (kcal\\,mol$^{-1}$ per atom)", "Potential energy per atom")
             pct = M[f"slow{n}FracBelowPct"] if n == "Free" else M[f"slow{n}FracPct"]
-            rho = "n/a" if n == "Li" else f"{M[f'slowCorr{n}']} ({M[f'slowCorr{n}Lo']} to {M[f'slowCorr{n}Hi']})"
-            fh.write(f"{etiqueta} & {M[f'slow{n}']} ({M[f'slow{n}Lo']} to {M[f'slow{n}Hi']}) & {sentido} & {pct}\\% & "
-                     f"{M[f'slow{n}Screen']} & {M[f'slow{n}Lit']} & {rho} \\\\\n")
+            fh.write(f"{etiqueta} & {M[f'slow{n}']} ({M[f'slow{n}Lo']} to {M[f'slow{n}Hi']}) & {sentido} & {pct}\\% \\\\\n")
+        fh.write("\\bottomrule\n\\end{tabular}\n\\par\\medskip\n\\textbf{Subsets and associations}\\par\\smallskip\n\\begin{tabular}{lrrr}\n\\toprule\nQuantity & Screening & Literature & $\\rho$ with Li (95\\% CI) \\\\\n\\midrule\n")
+        for n, etiqueta, _ in filas:
+            etiqueta = etiqueta.replace("Potential energy (kcal\\,mol$^{-1}$ per atom)", "Potential energy per atom")
+            rho = "--" if n == "Li" else f"{M[f'slowCorr{n}']} ({M[f'slowCorr{n}Lo']} to {M[f'slowCorr{n}Hi']})"
+            fh.write(f"{etiqueta} & {M[f'slow{n}Screen']} & {M[f'slow{n}Lit']} & {rho} \\\\\n")
         fh.write("\\bottomrule\n\\end{tabular}\n")
+
 
 
 if __name__ == "__main__":

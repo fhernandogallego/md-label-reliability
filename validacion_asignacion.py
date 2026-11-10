@@ -22,7 +22,7 @@ import pandas as pd
 from scipy import optimize, stats
 
 N_AZAR, LOTE = 2000, 5
-from comun import N_BOOT, SEMILLA_BOOT as SEMILLA, top_k                # semilla común a todos los bootstrap
+from comun import N_BOOT, SEMILLA_BOOT as SEMILLA, top_k, originales_cribado                # semilla común a todos los bootstrap
 TOPS = (0.10, 0.20)
 T = pd.read_csv("resultados/tabla_por_trayectoria.csv")
 cortas = T[T.ns == 5].sort_values("id")
@@ -31,7 +31,8 @@ A = rep[rep.carpeta.str.startswith("poly_9_nion")].set_index("sistema").D_extrem
 B = rep[rep.carpeta.str.contains("new_config")].set_index("sistema").D_extremos
 sis = sorted(set(A.index) & set(B.index)); xa, xb = np.log(A[sis].values), np.log(B[sis].values)
 L = T[T.ns == 50].set_index("sistema").D_medio
-S_TOT = float(np.log(cortas.D_extremos).std(ddof=1))
+poblacion = originales_cribado(T)
+S_TOT = float(np.log(poblacion.D_extremos).std(ddof=1))
 rng = np.random.default_rng(SEMILLA)
 R = {"n_replicados": len(sis), "n_boot": N_BOOT, "semilla": SEMILLA}
 
@@ -56,7 +57,7 @@ def posterior(suma, n, P, centro):
 
 
 # ---------- 1) Calibración, fuera de muestra (dejando uno fuera) ----------
-centro = float(np.log(cortas.D_extremos).mean())
+centro = float(np.log(poblacion.D_extremos).mean())
 R["calibracion"] = {}
 for top in TOPS:
     k = max(1, round(top * len(sis))); pred, obs = [], []
@@ -93,24 +94,27 @@ for top in TOPS:
 # ---------- 2) Minicampaña real a igual presupuesto ----------
 con_larga = [i for i, s in enumerate(sis) if s in L.index]
 ya, yb, ref = xa[con_larga], xb[con_larga], np.log(L[[sis[i] for i in con_larga]].values)
-n = len(ref); P = parametros(xa, xb); extra = n // 2
-R["campana"] = {"n": n, "segundas_corridas": extra}
+n = len(ref); P = parametros(ya, yb); extra = n // 2
+R["campana"] = {"n": n, "segundas_corridas": extra, "bootstrap": "refit noise and rerun policy at fixed budget", "random_draws_per_bootstrap": 50}
 
 
-def seleccion(usa_b, k):
-    suma = ya + np.where(usa_b, yb, 0); nn = 1 + usa_b.astype(float)
-    m, _, _ = posterior(suma, nn, P, centro)
-    return np.argsort(-m)[:k]
+def seleccion(usa_b, k, a=ya, b=yb, param=None):
+    suma = a + np.where(usa_b, b, 0); nn = 1 + usa_b.astype(float)
+    m, _, _ = posterior(suma, nn, P if param is None else param, centro)
+    return top_k(m, k)
 
 
-def frontera(k):
-    """Segundas corridas por lotes a los de mayor p·(1−p) respecto al corte del top-k, recalculado tras cada lote."""
-    usa_b = np.zeros(n, bool)
-    while usa_b.sum() < extra:
-        suma = ya + np.where(usa_b, yb, 0); nn = 1 + usa_b.astype(float)
-        m, s_post, _ = posterior(suma, nn, P, centro); c = np.sort(m)[-k]
-        p = stats.norm.cdf((m - c) / s_post); duda = np.where(usa_b, -1, p * (1 - p))
-        usa_b[np.argsort(-duda)[:min(LOTE, extra - usa_b.sum())]] = True
+def frontera(k, a=ya, b=yb, param=None):
+    """Reejecuta la política completa con exactamente floor(n/2) segundas corridas."""
+    n_local = len(a); presupuesto = n_local // 2
+    usa_b = np.zeros(n_local, bool)
+    while usa_b.sum() < presupuesto:
+        suma = a + np.where(usa_b, b, 0); nn = 1 + usa_b.astype(float)
+        m, s_post, _ = posterior(suma, nn, P if param is None else param, centro)
+        c = np.sort(m)[-k]; p = stats.norm.cdf((m - c) / s_post)
+        duda = np.where(usa_b, -1, p * (1 - p))
+        usa_b[top_k(duda, min(LOTE, presupuesto - usa_b.sum()))] = True
+    assert int(usa_b.sum()) == presupuesto
     return usa_b
 
 
@@ -127,17 +131,20 @@ for top in TOPS:
          "frontera": recall(seleccion(usa_f, k), k),
          "azar": float(np.mean([recall(seleccion(np.isin(np.arange(n), rng.choice(n, extra, replace=False)), k), k) for _ in range(N_AZAR)])),
          "A_y_B_todos": recall(seleccion(np.ones(n, bool), k), k)}
-    # bootstrap por sistemas, con reemplazo, de la diferencia frontera − azar. Por posiciones y con orden estable (top_k):
-    # las copias de un sistema tienen valores idénticos y se ordenan igual en la referencia y en la selección
+    # Bootstrap de todo el procedimiento: reajustar el ruido y reejecutar la asignación.
+    # El control es el recall medio de 50 asignaciones aleatorias al mismo presupuesto fijo.
     difs = []
     for _ in range(N_BOOT):
         idx = rng.integers(0, n, n); kk = max(1, round(top * len(idx)))
-        r_ = ref[idx]; verdad = set(top_k(r_, kk))
-        def sel_sub(usa):
-            suma = ya[idx] + np.where(usa, yb[idx], 0); nn = 1 + usa.astype(float)
-            m, _, _ = posterior(suma, nn, P, centro); return set(top_k(m, kk))
-        usa_az = np.zeros(len(idx), bool); usa_az[rng.choice(len(idx), int(usa_f[idx].sum()), replace=False)] = True
-        difs.append((len(verdad & sel_sub(usa_f[idx])) - len(verdad & sel_sub(usa_az))) / kk)
+        aa, bb, rr = ya[idx], yb[idx], ref[idx]
+        pp = parametros(aa, bb); verdad = set(top_k(rr, kk))
+        usa = frontera(kk, aa, bb, pp)
+        ac_f = len(verdad & set(seleccion(usa, kk, aa, bb, pp))) / kk
+        ac_azar = []
+        for _ in range(50):
+            usa_az = np.zeros(n, bool); usa_az[rng.choice(n, extra, replace=False)] = True
+            ac_azar.append(len(verdad & set(seleccion(usa_az, kk, aa, bb, pp))) / kk)
+        difs.append(ac_f - np.mean(ac_azar))
     e["dif_frontera_azar_ic95"] = [float(np.quantile(difs, .025)), float(np.quantile(difs, .975))]
     e["prob_frontera_mejor_o_igual"] = float(np.mean(np.array(difs) >= 0))
     R["campana"][str(top)] = e

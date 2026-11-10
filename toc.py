@@ -30,8 +30,8 @@ mu = rng.normal(0, s_sis, 220); lab = mu + rng.normal(0, s_run, mu.size)
 a1.scatter(mu, lab, s=2.5, color=AZUL, alpha=0.5, lw=0)
 lim = np.array([-1.5, 1.5]); a1.plot(lim, lim, color=TINTA2, lw=0.6, ls=(0, (2, 2)))
 a1.set_xlim(lim); a1.set_ylim(lim); a1.set_xticks([]); a1.set_yticks([])
-a1.set_xlabel("System property"); a1.set_ylabel("One 5 ns MD label")
-a1.text(1.45, -1.42, f"max. correlation ≈ {techo:.2f}\nML model: {rf:.2f}", ha="right", va="bottom", fontsize=5.6, color=TINTA,
+a1.set_xlabel("Expected short-run label"); a1.set_ylabel("One 5 ns MD label")
+a1.text(1.45, -1.42, f"estimated ceiling ≈ {techo:.2f}\nML model: {rf:.2f}", ha="right", va="bottom", fontsize=5.6, color=TINTA,
         bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
 a1.set_title("Short runs are noisy labels", fontsize=6.6, pad=3)
 
@@ -53,7 +53,7 @@ a2.axvline(k - 0.5, color=TINTA, lw=0.6, ls=(0, (2, 2)))
 a2.text(k + 0.4, n.max() + 0.9, "top-k cut-off", fontsize=5.4, color=TINTA, va="center")
 a2.set_xticks([]); a2.set_ylim(0, n.max() + 1.6); a2.set_yticks([1, int(n.max() // 2), int(n.max())])
 a2.set_xlabel("Candidates ranked by first run"); a2.set_ylabel("Runs")
-a2.text(N - 0.5, 0.55 * n.max(), f"same recall as\n4 runs each,\n{ahorro:.1f}× less MD", ha="right", va="center", fontsize=5.6, color=NARANJA)
+a2.text(N - 0.5, 0.55 * n.max(), f"simulated recall of\n4 runs each,\n{ahorro:.1f}× less MD", ha="right", va="center", fontsize=5.6, color=NARANJA)
 a2.set_title("Re-run only where it matters", fontsize=6.6, pad=3)
 
 fig.subplots_adjust(left=0.06, right=0.99, bottom=0.12, top=0.90)          # tamaño exacto 8,25 x 4,45 cm (sin recorte)

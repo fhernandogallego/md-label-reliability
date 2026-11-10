@@ -15,6 +15,12 @@
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage[section]{placeins}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{topnumber}{4}
+\setcounter{totalnumber}{6}
 \usepackage[hidelinks]{hyperref}
 \usepackage[capitalise]{cleveref}
 \input{preambulo_comun}
@@ -34,7 +40,7 @@ Alfonso Campo-Camacho, Alberto G\'omez-G\'omez}
 \maketitle
 
 \section{Data set}\label{si:sec:data}
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Data used in this study. All systems: LiTFSI in an amorphous polymer, PCFF+,
 \SI{353}{\kelvin}.}\label{si:tab:dataset}
@@ -56,30 +62,60 @@ Raw trajectories of the \nLong{} long runs were read as a stream, keeping only i
 solvating, and the system centre of mass. That list of types is the same for every system while
 the type numbering is not, so the kept polymer atoms are not always those that coordinate lithium
 (often they are hydrogen or carbon atoms); they are used only to follow the mobility of the
-polymer. The origin-averaged MSD computed from
-them reproduces the curves distributed by the platform to within a relative deviation of
+polymer. The origin-averaged lithium MSD computed from
+the extracted ion positions reproduces the curves distributed by the platform to within a relative deviation of
 \num{\valMaxDev} in every run, for lags up to 80\% of the run. Without subtracting the
 centre-of-mass motion, the MSD at a lag of \SI{25}{\nano\second} would be inflated by a median
 factor of \driftMed{} and by up to a factor of \driftMax{} (more than 10\% in \driftFracPct\% of
 the runs); the largest factors occur in the slowest systems, where a drift of the whole system
 by a few nanometres is comparable to the displacement of the lithium ions.
 
+\paragraph{Availability and sampling.}
+The folder name \texttt{rand\_100} indicates a nominal random sample of \sampleNominal{} systems. The
+released trajectory index contains \sampleAvailable{} new-configuration runs: \samplePaired{} have an original screening
+run, while system \texttt{9-0-489993648-0} is available only as a replica. The index does not
+explain the \sampleMissing{} other nominal entries, so missingness cannot be assessed fully. Of the \nLongScreen{}
+screening systems with a long run, \techoEndReprOverlap{} also have a replica. These two subsets therefore provide
+largely overlapping evidence.
+
+The primary population contains one original label per screening system (\mlNSys{} systems),
+excluding literature polymers and the replica-only system. The descriptive audit below compares
+the replicated systems with the rest. Similar marginal labels or modest descriptor differences
+do not prove equal noise across chemistry. Connector markers Au and Cu are excluded from heavy
+atom counts; these markers are retained in the model fingerprints to match the released monomers.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Sample audit. The first two numeric columns are medians; the final column is the
+mean difference (replicated minus rest) divided by the standard deviation in the rest.
+These are descriptive comparisons, not equivalence tests.}\label{si:tab:sample}
+\input{tabla_muestra}
+\end{table}
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Sensitivity of reliability to the denominator population. The noise estimate uses the
+same \nRep{} replicated systems in both columns; the broader population additionally includes
+literature trajectories and repeated labels.}\label{si:tab:population}
+\input{tabla_poblacion}
+\end{table}
+
 \section{Sensitivity of the regime census and of the lag dependence}\label{si:sec:sens}
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Sensitivity of the regime census to the lag window used to fit the effective exponent.
 The main text uses 0.2 to 0.6.}\label{si:tab:sens-window}
 \resizebox{\textwidth}{!}{\input{tabla_sensibilidad}}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Sensitivity of the lag dependence in the \nLong{} long runs to the reference lag
 $\tau_{\mathrm{ref}}$. The main text uses \SI{25}{\nano\second}.}\label{si:tab:sens-ref}
 \input{tabla_sensibilidad_ref}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Apparent diffusivity and ranking as a function of the observed lag in the long runs,
 relative to a lag of \SI{25}{\nano\second} (curve-based).}\label{si:tab:lag}
@@ -109,24 +145,24 @@ uses the lithium-O(TFSI) clusters computed in every frame during the simulations
 the cluster that contains each lithium, and the fraction of lithium ions whose cluster contains no
 anion oxygen; the number of anion nitrogens around each lithium uses a cutoff at the first
 minimum of the lithium-nitrogen radial distribution function of each system.
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{What changes between the first \SI{5}{\nano\second} segment of each long run and the late
-segments (\slowN{} runs). Mobilities are ratios first/late (median and bootstrap 95\% interval);
+segments (\slowN{} runs). Potential energy is in kcal mol$^{-1}$ per atom. Mobilities are ratios first/late (median and bootstrap 95\% interval);
 the other quantities are differences first $-$ late. ``Late segments'' gives the direction of the
 change, ``Systems'' the share of runs in which it occurs, and $\rho$ the Spearman correlation,
 across systems, with the slowdown of lithium.}\label{si:tab:slowdown}
-\resizebox{\textwidth}{!}{\input{tabla_ralentizacion}}
+{\small\setlength{\tabcolsep}{4pt}\input{tabla_ralentizacion}}
 \end{table}
 
 \section{Run-to-run reproducibility}\label{si:sec:rep}
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Reproducibility of a single \SI{5}{\nano\second} run, from \nRep{} systems simulated
 twice from different initial structures. Intervals by bootstrap over systems.}\label{si:tab:replicas}
-\resizebox{\textwidth}{!}{\begin{tabular}{lrrrrr}
+{\small\setlength{\tabcolsep}{3pt}\begin{tabular}{>{\raggedright\arraybackslash}p{0.21\textwidth}rrrrr}
 \toprule
-Estimator & $\sigma_{\mathrm{run}}$ (log) & Typical factor per run & Rank corr.\ between runs & Reliability $r$ (95\% CI) & ICC(1) (95\% CI) \\
+Estimator & $\sigma_{\mathrm{run}}$ & Factor & Rank corr. & $r$ (95\% CI) & ICC (95\% CI) \\
 \midrule
 End-point & \RepEndSd & \RepEndFactor & \RepEndRho & \RepEndIcc{} (\RepEndIccLo{} to \RepEndIccHi) & \RepEndIccSub{} (\RepEndIccSubLo{} to \RepEndIccSubHi) \\
 Origin-averaged, lag $T/2$ & \RepAvgSd & \RepAvgFactor & \RepAvgRho & \RepAvgIcc{} (\RepAvgIccLo{} to \RepAvgIccHi) & \RepAvgIccSub{} (\RepAvgIccSubLo{} to \RepAvgIccSubHi) \\
@@ -135,8 +171,9 @@ Origin-averaged, lag $T/2$ & \RepAvgSd & \RepAvgFactor & \RepAvgRho & \RepAvgIcc
 \end{table}
 
 Two runs of the same system differ by more than a factor of 1.5 in \RepEndDiffPct\% of the
-replicated systems. The replicated subset is not range-restricted (spread of $\ln\Dapp$
-\RepEndSdSub{} against \RepEndSdAll{} in the whole screening set). The effective exponent of an
+replicated systems. The original-label spread in the replicated subset and the primary screening population is
+reported in the sample audit. The reliability denominator uses one original label per screening
+system; the broader set of all short trajectories is a sensitivity analysis (below). The effective exponent of an
 individual \SI{5}{\nano\second} run is not reproducible (noise \RepBetaSd, rank correlation
 between runs $\RepBetaRho$): it characterises the population, not a single system.
 
@@ -152,8 +189,8 @@ of the two sets, as in the main text: \techoEndFracStructPct\%, \techoEndFracStr
 \techoAvgJointFracStructHi\%) of that of the origin-averaged label.
 
 \paragraph{Batches.} In the data set the original screening runs, the replicas and the long runs
-belong to three different batches. A batch effect would appear as a shift between them or as a
-different spread across systems. Neither is seen for the end-point label: the mean ratio original
+belong to three different batches. Constant shifts or changes in marginal spread are possible batch effects; system-specific
+effects need not produce either. Neither marginal difference is detected for the end-point label: the mean ratio original
 to replica is \techoEndBatchRepRatio{} (95\% interval \techoEndBatchRepRatioLo{} to
 \techoEndBatchRepRatioHi, $p=\techoEndBatchRepP$), the mean ratio of the short run to the first
 \SI{5}{\nano\second} of its long run is \techoEndBatchPrefRatio{} (\techoEndBatchPrefRatioLo{} to
@@ -164,25 +201,40 @@ estimates use the standard deviation of the differences, which excludes a consta
 removing it the reliability is \techoEndRelUncentred{}, unchanged. Batch and initial structure
 cannot be fully separated, because every replica is both new and from a later batch.
 
-\section{Lithium solvation and ion aggregation}\label{si:sec:solvation}
-For each of the \solvN{} long runs (\solvNScreen{} screening and \solvNLit{} literature polymers),
-the polymer atoms kept from the trajectories (\cref{si:sec:data}) within \SI{\solvRcut}{\angstrom}
-of a lithium ion count as its first shell; this is the cut-off the platform uses for
-lithium-anion contacts and the first minimum of the lithium-polymer pair distribution. As noted
-above, these atoms are of the types the platform lists as solvating but are not always the ones
-that coordinate lithium, so the shell describes the local polymer environment of each ion rather
-than its coordination. The persistence of the shell is the intermittent correlation of these contacts at a given lag, and
-ion aggregation comes from the cluster populations distributed with each trajectory. Rank
-correlations are taken over all long runs (replica noise: the \techoEndJointN{} replicated
-systems with a long run); bold values have a 95\% bootstrap interval that excludes zero.
+\section{Ion aggregation: exploratory associations}\label{si:sec:solvation}
+The platform's cluster populations provide the fraction of lithium without an anion and in
+clusters containing at least five lithium ions. We relate these descriptors to the long-run
+reference, short-run overestimation and ranking error. The latter two are also examined using
+partial Spearman correlations controlling for $\ln D_{50}$, because mobility and the bias
+measure share the long-run reference. All intervals are system bootstraps; these exploratory
+comparisons are not adjusted for multiple testing and do not establish a mechanism.
 
-\begin{table}[ht]
-\centering
-\caption{Lithium solvation and aggregation in the long runs, and their rank correlation with the
-long-run diffusivity, the overestimation by the short run ($\ln D_5-\ln D_{50}$), its rank error
-and the noise between replicas.}\label{si:tab:solvation}
-\resizebox{\textwidth}{!}{\input{tabla_solvatacion}}
+Polymer-contact descriptors from the initial extraction are not interpreted: the platform's
+fixed list of polymer atom types does not identify the same chemical species in every system.
+In particular, contacts with those retained atoms cannot be treated as a coordination shell or
+used to explain the structural noise component. Their cached values remain archived for
+transparency but are excluded from the chemical conclusions.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Exploratory aggregation associations (\solvN{} long runs). Entries are Spearman
+correlations with 95\% bootstrap intervals; partial correlations control for long-run mobility.
+Intervals spanning zero limit mechanistic interpretation.}\label{si:tab:solvation}
+\input{tabla_solvatacion}
 \end{table}
+
+\section{Predictor split checks}\label{si:sec:ml}
+Chemical-family cross-validation uses Butina clustering with Tanimoto similarity thresholds
+\mlFamFineSim{} (\mlFamFineGroups{} groups) and \mlFamCoarseSim{} (\mlFamCoarseGroups{} groups).
+The median similarity to the nearest training monomer is \mlFamFineNN{} and \mlFamCoarseNN{},
+respectively, against \mlNNSys{} for the system split. Cluster membership does not guarantee a
+pairwise train--test similarity cap, so these splits do not establish generalization to distant
+chemistry.
+
+In the trajectory split, \mlLeakPairs{} of the \nRep{} replica pairs fall in different folds.
+On their \mlLeakN{} labels, predictor correlation is \mlLeakTraj{} for trajectory splitting and
+\mlLeakSys{} for system splitting. This small difference is specific to the model and data;
+keeping all trajectories of each system together remains necessary to avoid leakage.
 
 \section{End-point estimator}\label{si:sec:endpoint}
 The end-point value of the \SI{5}{\nano\second} runs deviates from the power law fitted over
@@ -193,7 +245,7 @@ estimate at half the run length is \epRho. This deviation combines the single-or
 end point with any departure of the curve from a power law; the replicated runs
 (\cref{si:tab:replicas}) give the direct comparison of the two estimators.
 
-\begin{figure}[ht]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.55\textwidth]{figures/fig3_endpoint_noise.pdf}
 \caption{Deviation of the end-point MSD of the \SI{5}{\nano\second} runs from the power law
@@ -202,7 +254,7 @@ fitted over lags between 20\% and 60\% of the run. Dashed lines mark a factor of
 \end{figure}
 
 \section{Paired short and long runs}\label{si:sec:pairs}
-\begin{figure}[ht]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.5\textwidth]{figures/fig4_short_vs_long.pdf}
 \caption{End-point apparent diffusivity from the \SI{5}{\nano\second} run against the
@@ -213,7 +265,16 @@ origin-averaged apparent diffusivity at a lag of \SI{25}{\nano\second} from the
 \end{figure}
 
 \section{Prefix-based estimators and stopping rules}\label{si:sec:prefix}
-\begin{table}[ht]
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/fig5_prefix_estimators.pdf}
+\caption{Estimates from prefixes of the long trajectories. Left: median ratio to the finite-lag
+reference $\Dapp(25\,\mathrm{ns})$; right: ranking correlation with that reference.
+Reference and prefixes share trajectory data.}\label{si:fig:prefix}
+\end{figure}
+
+\begin{table}[!htbp]
 \centering
 \caption{Estimates from a prefix of length $T$ relative to the reference
 $\Dapp(\SI{25}{\nano\second})$ of the full \SI{50}{\nano\second} run: median ratio and typical
@@ -221,7 +282,7 @@ multiplicative error (\nPrefix{} runs).}\label{si:tab:prefix}
 \resizebox{\textwidth}{!}{\input{tabla_prefijos}}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Sensitivity of the prefix-based comparison to the reference (\refN{} long runs). Each
 cell gives the typical multiplicative error and, in parentheses, the median ratio of the estimate
@@ -231,7 +292,7 @@ apparent diffusivity at that lag, or the mean slope of $A\tau^{\beta}$ over
 \resizebox{\textwidth}{!}{\input{tabla_referencias}}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Stopping rules evaluated on the long runs (\nPrefix{} runs). Runs that do not meet a
 rule before \SI{50}{\nano\second} are simulated for the full length and evaluated there. Mean
@@ -248,7 +309,7 @@ that stop is \ruleBetaEightErrStop. The precision rule with a 20\% tolerance sto
 runs: a small bootstrap CV measures the precision of a lag-dependent quantity, not its distance
 from the long-lag value.
 
-\begin{figure}[ht]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.7\textwidth]{figures/fig6_cost_error.pdf}
 \caption{Cost-error frontier of estimators and stopping rules on the \frN{} long runs. Each line
@@ -259,7 +320,7 @@ linear fit and \frMinFixEndOneFive~ns with the end-point estimate (\frMinFixPowO
 \frMinFixFitOneThree{} and \frMinFixEndOneThree~ns for $\times1.3$).}\label{si:fig:frontier}
 \end{figure}
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Settings chosen on half of the systems and evaluated on the other half (median over
 \frSplits{} random partitions): mean simulated time, typical error, and percentage of partitions
@@ -299,7 +360,7 @@ not by its long-time diffusivity. Uniform replicates, successive halving and the
 re-screening use the same model, posterior and selection; only the choice of who receives each
 run differs. All random draws use fixed seeds, given in the code.
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Recall of the true top set for each allocation and mean budget (end-point label,
 Gaussian system values, \alReps{} simulated campaigns of \alN{} candidates); the values plotted
@@ -310,7 +371,7 @@ With one run per candidate the recall of the top 10\% is \alUnifTopTenBOne\%, no
 \input{tabla_asignacion}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Mean number of \SI{5}{\nano\second} runs per candidate that boundary-focused allocation
 needs to match the recall of uniform replicates, and the corresponding saving (end-point label,
@@ -329,7 +390,7 @@ Top 10\% & \alEqTopTenUnifTwo{} ($\times$\alSavingTopTenUnifTwo) & \alEqTopTenUn
 \end{table}
 
 The saving for the top 10\% against four uniform replicates is $\times$\alSavingTopTenUnifFourEmpEnd{}
-when the system values follow the empirical shape of the \nShort{} short runs instead of a normal
+when the system values follow the empirical shape of the original screening labels instead of a normal
 distribution, and $\times$\alSavingTopTenUnifFourNormAvg{} with the origin-averaged label. Using
 the mobility-dependent noise in the allocation does not help: the recall of the top 10\% with
 four runs per candidate is \alBoundTopTenBFour\% with it and \alBoundHomoTopTenBFour\% with a
@@ -339,42 +400,37 @@ the end-point label and 1.25 runs per candidate it recovers \alHalvingTopOneBOne
 against \alBoundTopOneBOneQuarterEnd\%; with the origin-averaged label and four runs per candidate it recovers
 \alHalvingTopOneBFourAvg\%, against \alBoundTopOneBFourAvg\%.
 
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
-\caption{Recall of the true top set with two and four runs per candidate on average, and saving
-against four uniform replicates, for boundary-focused allocation planned with the measured
-reliability or with the ends of its 95\% interval (the runs always follow the measured noise), and
-for a two-stage re-screening with the best of three fixed shortlists ($2k$, $4k$, $8k$) chosen in
-hindsight (with the shortlist fixed at $4k$ in advance the savings are
-$\times$\alTwoStageFourkSavingTopOne, $\times$\alTwoStageFourkSavingTopFive{} and
-$\times$\alTwoStageFourkSavingTopTen). End-point label, Gaussian system values, \alReps{} simulated campaigns; Monte Carlo
-standard error of each recall at most \alMCErrMax{} percentage points (median \alMCErrMed).}
+\caption{Recall at mean budgets of two/four runs (left/right), with saving against four uniform
+replicates in parentheses. The two-stage column chooses the best shortlist ($2k$, $4k$, $8k$)
+in hindsight. End-point labels, Gaussian system values, \alReps{} campaigns; Monte Carlo standard
+error at most \alMCErrChecksMax{} percentage points (median \alMCErrMed).}
 \label{si:tab:alloc-checks}
 \resizebox{\textwidth}{!}{\input{tabla_asignacion_extra}}
 \end{table}
 
-Underestimating the reliability makes the posterior trust each run less and spreads the
-replicates more widely; overestimating it concentrates them. Neither changes the saving much
-(\cref{si:tab:alloc-checks}). If instead the true reliability, not only the planned one, lies at
-either end of its interval (keeping the total spread of the short runs, and with the allocation
-using the correct value), the saving against four uniform replicates is
-$\times$\alTrueLoSavingTopOne{} ($r=\alRelPlanLo$) and $\times$\alTrueHiSavingTopOne{}
-($r=\alRelPlanHi$) for the top 1\%, $\times$\alTrueLoSavingTopFive{} and
-$\times$\alTrueHiSavingTopFive{} for the top 5\%, and $\times$\alTrueLoSavingTopTen{} and
-$\times$\alTrueHiSavingTopTen{} for the top 10\%: noisier labels reduce the saving but do not
-remove it. The two-stage re-screening is as good as boundary-focused allocation
-for the top 1\%, where the best shortlist is $8k$, but falls behind for broader targets, and a
-shortlist that is too short cannot recover candidates that the first run ranked low.
+Lower planned reliability spreads replicates more widely, but planning at either confidence
+limit changes savings little (\cref{si:tab:alloc-checks}). When the true reliability instead lies
+at those limits, keeping total label spread fixed and using the correct calibration, savings are
+$\times$\alTrueLoSavingTopOne{} to $\times$\alTrueHiSavingTopOne{} for the top 1\%,
+$\times$\alTrueLoSavingTopFive{} to $\times$\alTrueHiSavingTopFive{} for the top 5\%, and
+$\times$\alTrueLoSavingTopTen{} to $\times$\alTrueHiSavingTopTen{} for the top 10\%.
+These are model scenarios, not a full uncertainty interval for savings. Two-stage re-screening
+is sensitive to shortlist size; $8k$ is best for the top 1\% in these scenarios. Candidates ranked
+low initially may receive no further information if the shortlist is too short.
 
+\clearpage
 \section{Check of the adaptive allocation on real runs}\label{si:sec:val-alloc}
-\begin{table}[ht]
+\begin{table}[!htbp]
 \centering
 \caption{Check of the adaptive allocation on the replicated systems. Calibration: \valAlNRep{}
 systems, predictions in both directions (first run $\to$ second and second $\to$ first), noise
 parameters estimated leaving out the system evaluated. Campaign: \valAlNCamp{} systems with a long
 run; every system receives its first run and \valAlExtra{} receive a second run, chosen at the
 boundary or at random (mean of 2000 draws); recall of the top set according to the long run.
-Interval: bootstrap over systems of the difference between boundary and random placement.}
+Interval: bootstrap over systems, refitting the noise and rerunning the allocation at a fixed
+budget of \valAlExtra{} second runs. The random control averages 50 placements per resample.}
 \label{si:tab:val-alloc}
 \begin{tabular}{lrr}
 \toprule
@@ -393,9 +449,9 @@ Boundary $-$ random (95\% CI, points) & $\valAlDiffLoTen$ to $+\valAlDiffHiTen$ 
 \end{tabular}
 \end{table}
 
-The long runs start from the same structure as the first runs, so they favour the first run and
-understate the value of any second run from a new structure; this is why no strategy improves on
-the first run alone for the top 20\%. The size of this bias is not known, so the check is
-probably, but not demonstrably, conservative.
+The long runs share the structure of the first run, which can favour it relative to a second
+initialization. The direction and size of the effect on policy comparisons are not established;
+it does not explain the top-20\% result by itself. Calibration predicts a second noisy label,
+not latent top-set membership. The campaign also fits noise to its own pairs and is exploratory.
 
 \end{document}
