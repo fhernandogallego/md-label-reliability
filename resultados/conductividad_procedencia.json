@@ -1,0 +1,11 @@
+{
+  "source": "HTP-MD user-interface CSV export",
+  "source_filename": "molality-vs-conductivity.csv",
+  "source_sha256": "7d22950a792dd89cf14350d9045d8ae8eb4e2f12d8499cf63396d42b45e119b5",
+  "rows": 6270,
+  "source_url": "https://www.htpmd.matr.io/",
+  "license": "CC BY-NC 4.0",
+  "license_evidence": "https://data.matr.io/htp/",
+  "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
+  "units": "S/cm, as reported by the source; no conversion applied"
+}

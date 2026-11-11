@@ -1,0 +1,10 @@
+{
+  "source": "SCAYLE pilot summary supplied by the authors",
+  "source_summary_sha256": "fd91934a2e594fc51825e462ea012781aa6e8a6f471bfdb2d0d61137fa4b9c7e",
+  "source_commit": "abf3526",
+  "completed_runs": 49,
+  "planned_runs": 50,
+  "systems": 10,
+  "per_run_inputs_included": false,
+  "bootstrap_intervals": "Archived system-bootstrap summaries from simulaciones/comparar.py; not recomputed from per-run labels in this compact-input workflow."
+}

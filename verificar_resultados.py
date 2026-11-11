@@ -1,6 +1,7 @@
 """Comprueba consistencia entre análisis independientes y entradas publicadas."""
 import argparse
 import json
+import hashlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -40,3 +41,10 @@ if not args.sin_conductividad:
         assert 0<G[ion]['fiabilidad']<1
 print(f'Consistencia verificada: {len(A)} sistemas originales de cribado, {rep.sistema.nunique()} pares replicados.')
 if args.sin_conductividad: print('Conductividad omitida explícitamente en esta comprobación.')
+
+P=read('piloto_scayle')
+provenance=read('piloto_scayle_procedencia')
+assert hashlib.sha256(Path('resultados/piloto_scayle.json').read_bytes()).hexdigest()==provenance['source_summary_sha256']
+assert P['corridas']==provenance['completed_runs'] and P['n_sistemas']==provenance['systems']
+assert not provenance['per_run_inputs_included']
+print('Piloto: resumen archivado y procedencia coherentes; bootstrap por corrida no recalculado.')

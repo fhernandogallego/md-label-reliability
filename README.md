@@ -32,17 +32,20 @@ literature polymers and the system available only as a replica. The broader coll
 as a sensitivity analysis. Allocation targets the expected short-run label, not equilibrium transport.
 The fingerprint model is compatible with an uncertain noise ceiling; saturation is not established.
 
-**Pending input in this working revision:** the original per-trajectory conductivity export is
-not present in this checkout. The previous aggregate summary is preserved as
-`resultados/generalidad_pre_revision.json`, but is not used as a substitute for recalculation.
-Until the CSV is imported, an explicit partial draft excluding conductivity can be built with:
+The public repository is the reproducibility companion for the JCS manuscript. Development
+notes, original acquisition exports and HPC working directories are maintained separately.
+Only reviewed publication inputs, analysis code and manuscript artifacts belong here; this
+working tree must not be overwritten by a bulk export from the internal repository.
 
-```bash
-./actualizar.sh --reuse-campaigns --sin-conductividad
-```
+The conductivity input now covers all 6,270 published trajectory IDs. Source hashes, reported
+units and upstream terms are recorded in `resultados/conductividad_procedencia.json` and
+[resultados/README_fuentes.md](resultados/README_fuentes.md). HTP-MD source material retains its
+CC BY-NC 4.0 terms; the authors' data license does not replace them.
 
-The full pipeline fails early with an actionable error if the conductivity input is missing;
-it never silently mixes the old population's summary with the revised analyses.
+The new SCAYLE pilot is supplied as an archived summary of 49 runs in 10 systems. `piloto.py`
+regenerates its manuscript macros from that summary. Per-run pilot labels are not included in
+this snapshot, so its bootstrap intervals are archived results, not independently recomputed by
+the compact-input pipeline. This protocol check does not validate adaptive allocation.
 
 ### From compact inputs (no raw trajectories or network access)
 
@@ -53,8 +56,9 @@ python3 -m venv .venv
 ```
 
 This reads `resultados/tabla_por_trayectoria.csv`, `estructuras.csv`, `conductividad.csv`,
+`piloto_scayle.json`,
 and the published per-trajectory caches. It recomputes reliability, models, calibrated campaigns,
-tables, macros and figures, and compiles `paper/si.pdf` and `paper/jcs.pdf` if TeX is installed.
+tables, macros and figures (with pilot intervals taken from the archived summary), and compiles `paper/si.pdf` and `paper/jcs.pdf` if TeX is installed.
 Run logs are saved outside the repository in a temporary directory; errors stop the pipeline and
 print their log. `HTPMD_PYTHON` can select an existing Python interpreter.
 
@@ -69,6 +73,9 @@ Small-input checks can also be run directly:
 .venv/bin/python -m unittest discover -s tests
 .venv/bin/python verificar_resultados.py
 ```
+
+`--sin-conductividad` remains an explicit diagnostic mode for an analysis limited to ion
+diffusivities; it is not the complete release used for the manuscript.
 
 ### Recomputing trajectory-level inputs
 
@@ -104,5 +111,6 @@ pdflatex -halt-on-error jcs
 
 ## License
 
-Code: MIT (`LICENSE`). Derived data in `resultados/`: CC BY 4.0 (`LICENSE-data`). Please cite the paper and the
-HTP-MD sources when using them.
+Code: MIT (`LICENSE`). Original author contributions: CC BY 4.0 (`LICENSE-data`), subject to
+upstream rights. The HTP-MD conductivity input retains CC BY-NC 4.0. Please cite the paper
+and HTP-MD sources and retain the source notices when reusing the data.

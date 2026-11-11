@@ -9,33 +9,33 @@
  "todas": {
   "pearson": 0.6936210497439229,
   "pearson_ic95": [
-   0.6809322592763641,
-   0.7059588362909205
+   0.680932259276364,
+   0.7059588362909206
   ],
-  "r2": 0.4809191580922054,
+  "r2": 0.4809191580922053,
   "fraccion_del_techo": 1.048602499533582
  },
  "replicados": {
   "n": 94,
-  "pearson_A": 0.6435427756391822,
+  "pearson_A": 0.6435427756391823,
   "pearson_A_ic95": [
-   0.49683870537572855,
+   0.4968387053757284,
    0.7469174550483376
   ],
-  "pearson_B": 0.6767386323795351,
+  "pearson_B": 0.676738632379535,
   "pearson_B_ic95": [
    0.5334548617819574,
    0.7823946440535178
   ],
   "pearson_media": 0.7558121231682116,
   "pearson_media_ic95": [
-   0.6333780211868503,
-   0.8385227784699265
+   0.6333780211868502,
+   0.8385227784699264
   ],
   "media_esperada_por_el_modelo_de_medida": 0.7786472992642087,
   "ganancia_media_ic95": [
    0.06691492685066898,
-   0.12843939693219864
+   0.12843939693219886
   ]
  },
  "larga": {
@@ -43,7 +43,7 @@
   "todos": {
    "n": 133,
    "spearman_modelo": 0.7087522508138994,
-   "pearson_modelo": 0.6826098080147575,
+   "pearson_modelo": 0.6826098080147573,
    "spearman_corrida_corta": 0.8389783821834096,
    "pearson_corrida_corta": 0.9198123564953443,
    "dif_spearman_modelo_menos_corta_ic95": [
@@ -54,7 +54,7 @@
   "cribado": {
    "n": 96,
    "spearman_modelo": 0.6752848616386327,
-   "pearson_modelo": 0.7763188251016441,
+   "pearson_modelo": 0.776318825101644,
    "spearman_corrida_corta": 0.6758410200759631,
    "pearson_corrida_corta": 0.716256693376996,
    "dif_spearman_modelo_menos_corta_ic95": [
@@ -65,7 +65,7 @@
   "literatura": {
    "n": 37,
    "spearman_modelo": 0.4449845987101736,
-   "pearson_modelo": 0.4503865475775534,
+   "pearson_modelo": 0.45038654757755336,
    "spearman_corrida_corta": 0.9279279279279279,
    "pearson_corrida_corta": 0.9596822896518181,
    "dif_spearman_modelo_menos_corta_ic95": [
@@ -76,8 +76,8 @@
  },
  "fuga": {
   "n_trayectorias_replicadas_con_pareja_en_entrenamiento": 154,
-  "pearson_division_por_trayectoria": 0.6564715426502707,
-  "pearson_division_por_sistema": 0.6697830097090102,
+  "pearson_division_por_trayectoria": 0.6564715426502709,
+  "pearson_division_por_sistema": 0.6697830097090101,
   "pearson_todas_division_por_trayectoria": 0.6898539272360864
  },
  "familias": {
@@ -90,7 +90,7 @@
    "unitarios": 670,
    "pearson": 0.6869622816054655,
    "pearson_ic95": [
-    0.6740280921943379,
+    0.6740280921943381,
     0.6998590745734405
    ],
    "fraccion_del_techo": 1.0385359063752877,
@@ -105,7 +105,7 @@
    "unitarios": 41,
    "pearson": 0.6887136126585038,
    "pearson_ic95": [
-    0.6753507868897158,
+    0.6753507868897157,
     0.7011304855647501
    ],
    "fraccion_del_techo": 1.041183533808747,

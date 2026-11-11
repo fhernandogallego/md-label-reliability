@@ -50,6 +50,7 @@ run referencias.py
 run frontera.py
 run techo.py
 run auditoria_muestra.py
+run piloto.py
 if [[ $REUSE_CAMPAIGNS -eq 1 ]]; then run asignacion.py tablas; else run asignacion.py; fi
 run validacion_asignacion.py
 run ml_demo.py

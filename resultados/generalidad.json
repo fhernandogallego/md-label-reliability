@@ -3,7 +3,7 @@
  "n_replicados": 94,
  "n_poblacion": 6003,
  "poblacion": "original screening systems",
- "conductividad_incluida": false,
+ "conductividad_incluida": true,
  "Li": {
   "sd_run": 0.2783076985432242,
   "fiabilidad": 0.5442029135405303,
@@ -17,10 +17,10 @@
   "sd_rapidos": 0.26437286243809127,
   "spearman_larga_cribado": 0.7001763429191535,
   "spearman_larga_literatura": 0.9421526789947842,
-  "ml_pearson": 0.7569571418157726,
-  "ml_rep_una": 0.7421366650543793,
+  "ml_pearson": 0.7569571418157728,
+  "ml_rep_una": 0.7421366650543791,
   "ml_rep_media": 0.824439953381122,
-  "ml_rep_media_esperada": 0.8445914922770302,
+  "ml_rep_media_esperada": 0.8445914922770301,
   "asignacion": {
    "uniforme": {
     "1.0": 0.5000166666666668,
@@ -76,6 +76,49 @@
    },
    "presupuesto_iguala_4": 1.4688221709006948,
    "ahorro_frente_a_4": 2.723270440251569
+  }
+ },
+ "Cond": {
+  "sd_run": 0.31105099541066594,
+  "fiabilidad": 0.6301153464596331,
+  "fiabilidad_ic95": [
+   0.5059681604415827,
+   0.7442042998902212
+  ],
+  "techo": 0.7937980514335072,
+  "fiabilidad_2rep": 0.773092956677145,
+  "sd_lentos": 0.31141821527110325,
+  "sd_rapidos": 0.30954815551352366,
+  "spearman_larga_cribado": 0.7732365708084644,
+  "spearman_larga_literatura": 0.9767662399241345,
+  "ml_pearson": 0.7274113932678636,
+  "ml_rep_una": 0.6921664668031908,
+  "ml_rep_media": 0.7765990094230071,
+  "ml_rep_media_esperada": 0.7666839737302228,
+  "asignacion": {
+   "uniforme": {
+    "1.0": 0.5546666666666666,
+    "2.0": 0.6593000000000001,
+    "3.0": 0.7130166666666667,
+    "4.0": 0.747
+   },
+   "frontera": {
+    "1.0": 0.5543833333333333,
+    "1.25": 0.6764166666666668,
+    "1.5": 0.72935,
+    "2.0": 0.7834333333333332,
+    "2.5": 0.8157333333333335,
+    "3.0": 0.8351666666666668,
+    "4.0": 0.8682500000000001
+   },
+   "presupuesto_iguala_4": 1.6631741140215717,
+   "ahorro_frente_a_4": 2.4050398369464516
+  },
+  "frente_a_DLi": {
+   "spearman_sistemas_cortas": 0.5575137608701437,
+   "spearman_sistemas_largas": 0.6618556701030929,
+   "solape_top10_cortas": 0.4666666666666667,
+   "corr_ruido_replicas": 0.7785703179958728
   }
  }
 }

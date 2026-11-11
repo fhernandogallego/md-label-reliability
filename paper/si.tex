@@ -223,6 +223,32 @@ Intervals spanning zero limit mechanistic interpretation.}\label{si:tab:solvatio
 \input{tabla_solvatacion}
 \end{table}
 
+\section{New runs with the original protocol}\label{si:sec:pilot}
+A SCAYLE pilot selected \pilN{} screening systems at random (seed 20261104) among the systems
+with an original run, a replica and a long run. The planned five runs per system comprised one
+production re-run from the original structure and velocities, two with new velocities from the
+same structure, and two from annealed structures. The production settings were NVT at
+\SI{353}{\kelvin}, PCFF+, and \SI{5}{\nano\second}. Annealing used \SI{600}{\kelvin}, cooling,
+and NPT re-equilibration; it is a different preparation from the dataset's original generator.
+Of 50 planned runs, \pilRuns{} were completed in the supplied snapshot.
+
+The geometric-mean re-run/original ratio is \pilRepShift{} (95\% interval \pilRepShiftLo{} to
+\pilRepShiftHi). The estimated within-system standard deviation across the available original and
+same-structure production labels is \pilSdDyn{} (\pilSdDynLo{} to \pilSdDynHi),
+compatible with \techoEndSdDyn{} from the screening-pair comparison. Shared initial histories
+and the small sample limit this check; it is not evidence of complete dynamical independence.
+The available pairs of annealed runs give dispersion \pilSdRec{} (\pilSdRecLo{} to \pilSdRecHi), compared
+with \pilSdHtp{} (\pilSdHtpLo{} to \pilSdHtpHi) for the dataset's original/replica pairs in the
+same systems. These small-sample estimates do not resolve a structural variance component.
+The annealed/original geometric-mean ratio is \pilRecShift{} (\pilRecShiftLo{} to \pilRecShiftHi),
+whose interval includes one; a systematic shift is not established.
+
+The public compact-input release contains the authors' aggregate summary and its provenance.
+The intervals were produced by system bootstrap in the private pilot analysis; per-run labels
+are not included in this snapshot. The release regenerates the reported macros from those
+summaries, rather than recalculating pilot bootstrap intervals. This pilot checks the protocol
+and noise scale, not the efficacy of adaptive allocation.
+
 \section{Predictor split checks}\label{si:sec:ml}
 Chemical-family cross-validation uses Butina clustering with Tanimoto similarity thresholds
 \mlFamFineSim{} (\mlFamFineGroups{} groups) and \mlFamCoarseSim{} (\mlFamCoarseGroups{} groups).
