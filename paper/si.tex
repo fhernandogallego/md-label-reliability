@@ -1,7 +1,6 @@
 % =============================================================================
 %  Supplementary Material for jcs.tex (Journal of Computational Science). Compile si.tex BEFORE
 %  jcs.tex: the manuscript imports the S-numbered labels of this document through xr.
-%  (jcim.tex, the earlier JCIM version, imports the same labels.)
 % =============================================================================
 \documentclass[11pt]{article}
 \usepackage[T1]{fontenc}
@@ -234,14 +233,31 @@ All \pilRuns{} planned runs were completed; one annealed run (system 9-0-4136436
 second annealing replicate) failed during melting and was repeated with a new velocity seed.
 
 The geometric-mean re-run/original ratio is \pilRepShift{} (95\% interval \pilRepShiftLo{} to
-\pilRepShiftHi). The estimated within-system standard deviation across the available original and
-same-structure production labels is \pilSdDyn{} (\pilSdDynLo{} to \pilSdDynHi),
-compatible with \techoEndSdDyn{} from the screening-pair comparison. Shared initial histories
-and the small sample limit this check; it is not evidence of complete dynamical independence.
-The available pairs of annealed runs give dispersion \pilSdRec{} (\pilSdRecLo{} to \pilSdRecHi), compared
-with \pilSdHtp{} (\pilSdHtpLo{} to \pilSdHtpHi) for the dataset's original/replica pairs in the
-same systems. These small-sample estimates do not resolve a structural variance component.
-The annealed/original geometric-mean ratio is \pilRecShift{} (\pilRecShiftLo{} to \pilRecShiftHi),
+\pilRepShiftHi), so the production protocol is reproduced without a detectable shift.
+
+\emph{Dynamic noise and shared histories.} Pooling the original and the three same-structure
+production runs gives a within-system standard deviation of \pilSdDyn{} (\pilSdDynLo{} to
+\pilSdDynHi), compatible with \techoEndSdDyn{} from the screening-pair comparison. The run types
+differ, however. Repeating the original run with the same structure and velocities gives
+\pilSdExact{} (\pilSdExactLo{} to \pilSdExactHi): numerical differences alone make the
+trajectories diverge, but they keep part of the memory of the shared velocities. Two runs with
+new velocities give \pilSdNewVel{} (\pilSdNewVelLo{} to \pilSdNewVelHi). The screening-pair value
+\techoEndSdDyn{} lies within the second interval and above the first, which argues against a
+shared dynamical history between the short run and the long run of an HTP-MD pair, although ten
+systems cannot exclude it.
+
+\emph{Structural noise.} The annealed pairs give dispersion \pilSdRec{} (\pilSdRecLo{} to
+\pilSdRecHi), compared with \pilSdHtp{} (\pilSdHtpLo{} to \pilSdHtpHi) for the dataset's
+original/replica pairs in the same systems. Before the runs we required the annealed dispersion
+to be compatible with the population noise \RepEndSd{}; its interval excludes that value. Either
+annealing renews the structure less than the dataset's generator does, or these ten systems are
+less noisy than average, as their own original/replica dispersion also suggests; the pilot cannot
+separate the two. Pooling all labels from different structures (original, replica and the two
+annealed runs) gives \pilSdDistinct{} (\pilSdDistinctLo{} to \pilSdDistinctHi), which attributes
+\pilStrPct\% of the run-to-run variance to structure in these systems, with an interval reaching
+\pilStrPctHi\% and extending below zero. The pilot is therefore compatible with both no structural
+contribution and the population estimate, and does not test that decomposition. The
+annealed/original geometric-mean ratio is \pilRecShift{} (\pilRecShiftLo{} to \pilRecShiftHi),
 whose interval includes one; a systematic shift is not established.
 
 The public release includes the 50 new labels, 20 HTP-MD controls and authors' reference
@@ -292,6 +308,17 @@ origin-averaged apparent diffusivity at a lag of \SI{25}{\nano\second} from the
 (\nPairs{} systems). The dashed line is the identity.}
 \label{si:fig:pairs}
 \end{figure}
+
+\begin{table}[!htbp]
+\centering
+\caption{Recall of the best systems according to the \SI{50}{\nano\second} reference when they are
+selected from the \SI{5}{\nano\second} run of the same system (\nPairs{} systems; the last rows
+only the \ScrN{} screening polymers). Intervals by bootstrap over systems; ``Random'' is the expected
+recall of a random selection of $k$ systems. All recalls are optimistic, because the two runs of a
+pair share their initial structure.}
+\label{si:tab:selection}
+\input{tabla_seleccion}
+\end{table}
 
 \section{Prefix-based estimators and stopping rules}\label{si:sec:prefix}
 Prefixes use unwrapped lithium positions after subtracting the whole-system centre of mass.
@@ -497,5 +524,50 @@ The long runs share the structure of the first run, which can favour it relative
 initialization. The direction and size of the effect on policy comparisons are not established;
 it does not explain the top-20\% result by itself. Calibration predicts a second noisy label,
 not latent top-set membership. The campaign also fits noise to its own pairs and is exploratory.
+
+\emph{Power.} Campaigns of the same size simulated with the calibrated noise (2,000 campaigns,
+evaluated against the expected-label top set, 50 random placements each) give an expected
+advantage of boundary over random placement of \olPowTenAdv{} percentage points for the top 10\%
+(standard deviation \olPowTenSd{} between campaigns; no advantage in \olPowTenNoGainPct\% of them)
+and \olPowTwentyAdv{} points for the top 20\% (\olPowTwentySd; \olPowTwentyNoGainPct\%). A 5\% test
+detects the advantage in \olPowTenPct\% and \olPowTwentyPct\% of such campaigns; 80\% power would
+need about \olPowTenNEighty{} and \olPowTwentyNEighty{} systems with two runs each.
+
+\section{Allocation with the long run as target}\label{si:sec:long-target}
+The \olN{} screening systems with a replica and a long run give the correlation between the
+expected short label and the long-run reference ($D_\mathrm{app}$ at \SI{25}{\nano\second}):
+the replica, which starts from a structure independent of the long run, correlates \olCorrBL{}
+with it, and the two short runs correlate \olCorrAB{} with each other, so
+$\rho = \olCorrBL/\sqrt{\olCorrAB} = \olRho$ (bootstrap 95\% interval \olRhoLo{} to 1). The
+campaigns of \cref{si:sec:alloc} are repeated with the top $k$ defined by a long-run value
+$\lambda = \rho\,\mu/\sigma_\mathrm{sys} + \sqrt{1-\rho^2}\,z$, $z\sim\mathcal{N}(0,1)$, with the
+same noise model, policies and 100 campaigns per setting. With $\rho=1$ the results reproduce the
+main analysis. The ceiling is the recall obtained by selecting on the exact expected short label.
+
+\begin{table}[ht]
+\centering
+\caption{Recall of the long-run top set (end-point label, Gaussian system values, 100 simulated
+campaigns of \alN{} candidates per setting). Equivalent budget: mean runs per candidate with which
+boundary-focused allocation matches four uniform replicates, and the saving.}
+\label{si:tab:long-target}
+\small
+\begin{tabular}{llcccccc}
+\toprule
+Target & $\rho$ & Ceiling & Uniform, 1 & Uniform, 4 & Boundary, 2 & Equivalent & Saving \\
+\midrule
+Top 10\% & 1 & \olOneTopTenCeil\% & \olOneTopTenUnifOne\% & \olOneTopTenUnifFour\% & \olOneTopTenBoundTwo\% & \olOneTopTenEq & $\times$\olOneTopTenSaving \\
+ & \olRho & \olEstTopTenCeil\% & \olEstTopTenUnifOne\% & \olEstTopTenUnifFour\% & \olEstTopTenBoundTwo\% & \olEstTopTenEq & $\times$\olEstTopTenSaving \\
+ & \olRhoLo & \olLowTopTenCeil\% & \olLowTopTenUnifOne\% & \olLowTopTenUnifFour\% & \olLowTopTenBoundTwo\% & \olLowTopTenEq & $\times$\olLowTopTenSaving \\
+Top 1\% & 1 & \olOneTopOneCeil\% & \olOneTopOneUnifOne\% & \olOneTopOneUnifFour\% & \olOneTopOneBoundTwo\% & \olOneTopOneEq & $\times$\olOneTopOneSaving \\
+ & \olRho & \olEstTopOneCeil\% & \olEstTopOneUnifOne\% & \olEstTopOneUnifFour\% & \olEstTopOneBoundTwo\% & \olEstTopOneEq & $\times$\olEstTopOneSaving \\
+ & \olRhoLo & \olLowTopOneCeil\% & \olLowTopOneUnifOne\% & \olLowTopOneUnifFour\% & \olLowTopOneBoundTwo\% & \olLowTopOneEq & $\times$\olLowTopOneSaving \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The estimate assumes that the replica's noise is independent of the long run and that the
+reliability in these \olN{} systems is the correlation of their two short runs. Because the long
+reference is itself a single run, $\rho$ is its correlation with the expected short label, not
+with an equilibrium coefficient.
 
 \end{document}

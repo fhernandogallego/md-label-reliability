@@ -53,6 +53,7 @@ run auditoria_muestra.py
 run piloto.py
 if [[ $REUSE_CAMPAIGNS -eq 1 ]]; then run asignacion.py tablas; else run asignacion.py; fi
 run validacion_asignacion.py
+run objetivo_largo.py
 run ml_demo.py
 if [[ $WITHOUT_CONDUCTIVITY -eq 1 ]]; then run generalidad.py --sin-conductividad; else run generalidad.py; fi
 run figuras_diagnostico.py

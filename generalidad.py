@@ -164,7 +164,8 @@ for ion, nn in (("Li", "Li"), ("TFSI", "Tfsi"), ("Cond", "Cond")):
     M.update({f"gen{nn}Rel": f2(e["fiabilidad"]), f"gen{nn}RelLo": f2(e["fiabilidad_ic95"][0]), f"gen{nn}RelHi": f2(e["fiabilidad_ic95"][1]),
               f"gen{nn}Ceil": f2(e["techo"]), f"gen{nn}Ml": f2(e["ml_pearson"]), f"gen{nn}MlMean": f2(e["ml_rep_media"]),
               f"gen{nn}MlMeanExp": f2(e["ml_rep_media_esperada"]), f"gen{nn}RhoScreen": f2(e["spearman_larga_cribado"]),
-              f"gen{nn}Saving": f"{e['asignacion']['ahorro_frente_a_4']:.1f}", f"gen{nn}SdSlow": f2(e["sd_lentos"]), f"gen{nn}SdFast": f2(e["sd_rapidos"])})
+              f"gen{nn}Saving": f"{e['asignacion']['ahorro_frente_a_4']:.1f}", f"gen{nn}SdSlow": f2(e["sd_lentos"]), f"gen{nn}SdFast": f2(e["sd_rapidos"]),
+              f"gen{nn}Sd": f2(e["sd_run"]), f"gen{nn}SdLogTen": f2(e["sd_run"] / np.log(10))})   # log10, para comparar con Xie et al.
 if "Cond" in R:
     X = R["Cond"]["frente_a_DLi"]; M.update({"genCondVsLiRhoShort": f2(X["spearman_sistemas_cortas"]), "genCondVsLiRhoLong": f2(X["spearman_sistemas_largas"]),
                                             "genCondVsLiTopTenPct": f"{100 * X['solape_top10_cortas']:.0f}", "genCondVsLiNoiseCorr": f2(X["corr_ruido_replicas"])})

@@ -62,4 +62,27 @@ recalculated=calcular(labels)
 assert max(diferencias(recalculated,P))<1e-12
 assert max(diferencias(P,read('piloto_scayle_referencia')))<1e-12
 assert Path('paper/numeros_piloto.tex').read_text()==macros(P)
+from piloto import desglose, macros_desglose
+D=desglose(labels)
+assert max(diferencias(D,read('piloto_desglose')))<1e-12
+assert Path('paper/numeros_piloto_desglose.tex').read_text()==macros_desglose(D)
 print('Piloto: 50 corridas, 20 controles, selección aleatoria, bootstrap y macros verificados desde las etiquetas.')
+
+# Ninguna macro sin valor ("n/a") puede aparecer en la prosa del artículo o del suplementario
+import re
+sin_valor={m for f in Path('paper').glob('numeros*.tex')
+           for m in re.findall(r'\\newcommand\{\\(\w+)\}\{n/a\}',f.read_text())}
+for doc in ['paper/jcs.tex','paper/si.tex']:
+    usadas=sin_valor & set(re.findall(r'\\(\w+)',Path(doc).read_text()))
+    assert not usadas,f'{doc} usa macros sin valor: {sorted(usadas)}'
+print('Texto: ninguna macro sin valor (n/a) en jcs.tex ni si.tex.')
+
+# R1/R2: con ρ = 1 el objetivo largo reproduce la simulación principal (dentro del error Monte Carlo)
+OL=read('objetivo_largo'); C0=read('asignacion')
+for top in ['0.1','0.01']:
+    e=OL['campanas'][f'uno|{top}']
+    for b in ['1.0','4.0']:
+        ref=C0['resultados'][f'D_extremos|normal|{top}|uniforme|{b}']['recall']
+        assert abs(e['uniforme'][b]-ref)<0.03,(top,b,e['uniforme'][b],ref)
+assert 0<OL['rho']['valor']<=1.05 and OL['potencia']['0.1']['potencia_5pct']<0.5
+print(f"Objetivo largo: ρ = {OL['rho']['valor']:.2f}; con ρ = 1 reproduce la simulación principal; potencia de la campaña real {OL['potencia']['0.1']['potencia_5pct']:.2f}.")

@@ -181,6 +181,12 @@ for nombre, corte in (("finas", 0.4), ("gruesas", 0.6)):
                              "vecino_en_entrenamiento": vecino_en_entrenamiento(pl),
                              "spearman_larga_cribado": float(stats.spearmanr(pf[s3c].values, np.log(L.loc[s3c, "D_medio"].values))[0])}
 
+# Cota inferior de la fiabilidad implicada por el propio modelo: si el ruido de la etiqueta de evaluación es independiente de
+# la predicción (división por sistema), corr(f, y) = corr(f, µ)·√r <= √r, luego r >= corr². Se combina con el intervalo de
+# las réplicas (techo.json, ya en escala de correlación).
+c_lo = R["todas"]["pearson_ic95"][0]; t_lo, t_hi = (float(v) for v in H["techo_correlacion_ic95"])
+R["cota_fiabilidad"] = {"r_minimo": R["todas"]["pearson"] ** 2, "r_minimo_ic95_inferior": c_lo ** 2,
+                        "r_combinado": [max(t_lo, c_lo) ** 2, t_hi ** 2], "techo_combinado": [max(t_lo, c_lo), t_hi]}
 json.dump(R, open("resultados/ml_demo.json", "w"), indent=1, default=float)
 
 # ---------- Macros y tabla ----------
@@ -207,6 +213,10 @@ for nombre, nn in (("finas", "Fine"), ("gruesas", "Coarse")):
               f"mlFam{nn}CorrLo": f2(e["pearson_ic95"][0]), f"mlFam{nn}CorrHi": f2(e["pearson_ic95"][1]),
               f"mlFam{nn}FracCeilPct": f"{100 * e['fraccion_del_techo']:.0f}", f"mlFam{nn}NN": f2(e["vecino_en_entrenamiento"]),
               f"mlFam{nn}LongScreen": f2(e["spearman_larga_cribado"])})
+Cb = R["cota_fiabilidad"]
+M.update({"mlRelBound": f2(Cb["r_minimo"]), "mlRelBoundLo": f2(Cb["r_minimo_ic95_inferior"]),
+          "mlRelCombLo": f2(Cb["r_combinado"][0]), "mlRelCombHi": f2(Cb["r_combinado"][1]),
+          "mlCeilCombLo": f2(Cb["techo_combinado"][0]), "mlCeilCombHi": f2(Cb["techo_combinado"][1])})
 with open("paper/numeros_ml.tex", "w") as fh:
     fh.write("% Generado por ml_demo.py a partir de resultados/ml_demo.json. No editar a mano.\n")
     for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")

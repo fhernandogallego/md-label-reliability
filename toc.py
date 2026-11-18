@@ -1,4 +1,4 @@
-"""Gráfico para la tabla de contenidos de JCIM (8,25 cm x 4,45 cm), esquemático pero con las cifras de los resultados.
+"""Gráfico resumen (8,25 cm x 4,45 cm), esquemático pero con las cifras de los resultados.
 
 Izquierda: etiquetas simuladas de 5 ns frente a la propiedad de cada sistema, con el ruido medido (techo √r) y la correlación
 del random forest. Derecha: candidatos ordenados por su primera corrida y réplicas extra concentradas cerca del corte del

@@ -112,5 +112,17 @@
    "vecino_en_entrenamiento": 0.6470588445663452,
    "spearman_larga_cribado": 0.6903689636462289
   }
+ },
+ "cota_fiabilidad": {
+  "r_minimo": 0.4811101606478616,
+  "r_minimo_ic95_inferior": 0.4636687417232136,
+  "r_combinado": [
+   0.4636687417232136,
+   0.6062077122635715
+  ],
+  "techo_combinado": [
+   0.6809322592763641,
+   0.7785934190985507
+  ]
  }
 }
