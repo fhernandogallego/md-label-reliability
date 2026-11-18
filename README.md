@@ -42,10 +42,13 @@ units and upstream terms are recorded in `resultados/conductividad_procedencia.j
 [resultados/README_fuentes.md](resultados/README_fuentes.md). HTP-MD source material retains its
 CC BY-NC 4.0 terms; the authors' data license does not replace them.
 
-The new SCAYLE pilot is supplied as an archived summary of 49 runs in 10 systems. `piloto.py`
-regenerates its manuscript macros from that summary. Per-run pilot labels are not included in
-this snapshot, so its bootstrap intervals are archived results, not independently recomputed by
-the compact-input pipeline. This protocol check does not validate adaptive allocation.
+The SCAYLE pilot is complete: 50 new runs in 10 systems, plus 20 original/replica control labels
+in `resultados/etiquetas_piloto.csv`. One annealed run failed during melting and was repeated
+with a new velocity seed. `piloto.py` recalculates the estimates and 2,000 system-bootstrap
+intervals, checks the HTP-MD controls, and compares every result with the authors' reference
+summary (agreement within 1e-12). `verificar_resultados.py` also reproduces the random system
+selection. The raw pilot trajectories are not needed for this compact-input analysis.
+This small protocol check does not validate adaptive allocation or resolve a structural variance component.
 
 ### From compact inputs (no raw trajectories or network access)
 
@@ -56,9 +59,10 @@ python3 -m venv .venv
 ```
 
 This reads `resultados/tabla_por_trayectoria.csv`, `estructuras.csv`, `conductividad.csv`,
-`piloto_scayle.json`,
+`etiquetas_piloto.csv`,
 and the published per-trajectory caches. It recomputes reliability, models, calibrated campaigns,
-tables, macros and figures (with pilot intervals taken from the archived summary), and compiles `paper/si.pdf` and `paper/jcs.pdf` if TeX is installed.
+tables, macros and figures, including the pilot bootstrap intervals, and compiles `paper/si.pdf`
+and `paper/jcs.pdf` if TeX is installed.
 Run logs are saved outside the repository in a temporary directory; errors stop the pipeline and
 print their log. `HTPMD_PYTHON` can select an existing Python interpreter.
 

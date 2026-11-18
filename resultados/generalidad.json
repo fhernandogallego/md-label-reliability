@@ -17,10 +17,10 @@
   "sd_rapidos": 0.26437286243809127,
   "spearman_larga_cribado": 0.7001763429191535,
   "spearman_larga_literatura": 0.9421526789947842,
-  "ml_pearson": 0.7569571418157728,
-  "ml_rep_una": 0.7421366650543791,
-  "ml_rep_media": 0.824439953381122,
-  "ml_rep_media_esperada": 0.8445914922770301,
+  "ml_pearson": 0.756957141815773,
+  "ml_rep_una": 0.7421366650543794,
+  "ml_rep_media": 0.8244399533811221,
+  "ml_rep_media_esperada": 0.8445914922770303,
   "asignacion": {
    "uniforme": {
     "1.0": 0.5000166666666668,
@@ -91,7 +91,7 @@
   "sd_rapidos": 0.30954815551352366,
   "spearman_larga_cribado": 0.7732365708084644,
   "spearman_larga_literatura": 0.9767662399241345,
-  "ml_pearson": 0.7274113932678636,
+  "ml_pearson": 0.7274113932678633,
   "ml_rep_una": 0.6921664668031908,
   "ml_rep_media": 0.7765990094230071,
   "ml_rep_media_esperada": 0.7666839737302228,

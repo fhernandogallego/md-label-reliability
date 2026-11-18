@@ -1,10 +1,18 @@
 {
-  "source": "SCAYLE pilot summary supplied by the authors",
-  "source_summary_sha256": "fd91934a2e594fc51825e462ea012781aa6e8a6f471bfdb2d0d61137fa4b9c7e",
-  "source_commit": "abf3526",
-  "completed_runs": 49,
+  "source": "SCAYLE pilot per-run labels and author-supplied reference summary",
+  "source_summary_sha256": "5b17642f33b08148f010fd935d30a153657486788b3edde7488e83dd4b301a4a",
+  "source_commit": "bedfdfe",
+  "completed_runs": 50,
   "planned_runs": 50,
   "systems": 10,
-  "per_run_inputs_included": false,
-  "bootstrap_intervals": "Archived system-bootstrap summaries from simulaciones/comparar.py; not recomputed from per-run labels in this compact-input workflow."
+  "per_run_inputs_included": true,
+  "bootstrap_intervals": "Recomputed by piloto.py from all per-run labels using 2,000 system bootstrap resamples, seed 20261014; compared with the author-supplied reference summary.",
+  "note": "All 50 planned runs completed; annealed run 9-0-413643629-0 rec2 was repeated with a new velocity seed after failing during melting.",
+  "source_labels_path": "simulaciones/etiquetas_piloto.csv",
+  "source_labels_sha256": "5e50d823370353119a6aedb87503f0408be233447cd575641a00fcdc026c6f01",
+  "units": "Natural logarithm of diffusivity in angstrom^2/ns; production duration in ns",
+  "bootstrap_resamples": 2000,
+  "bootstrap_seed": 20261014,
+  "system_selection_seed": 20261104,
+  "eligible_systems": 92
 }

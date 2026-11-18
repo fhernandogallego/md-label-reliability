@@ -230,7 +230,8 @@ production re-run from the original structure and velocities, two with new veloc
 same structure, and two from annealed structures. The production settings were NVT at
 \SI{353}{\kelvin}, PCFF+, and \SI{5}{\nano\second}. Annealing used \SI{600}{\kelvin}, cooling,
 and NPT re-equilibration; it is a different preparation from the dataset's original generator.
-Of 50 planned runs, \pilRuns{} were completed in the supplied snapshot.
+All \pilRuns{} planned runs were completed; one annealed run (system 9-0-413643629-0,
+second annealing replicate) failed during melting and was repeated with a new velocity seed.
 
 The geometric-mean re-run/original ratio is \pilRepShift{} (95\% interval \pilRepShiftLo{} to
 \pilRepShiftHi). The estimated within-system standard deviation across the available original and
@@ -243,11 +244,13 @@ same systems. These small-sample estimates do not resolve a structural variance 
 The annealed/original geometric-mean ratio is \pilRecShift{} (\pilRecShiftLo{} to \pilRecShiftHi),
 whose interval includes one; a systematic shift is not established.
 
-The public compact-input release contains the authors' aggregate summary and its provenance.
-The intervals were produced by system bootstrap in the private pilot analysis; per-run labels
-are not included in this snapshot. The release regenerates the reported macros from those
-summaries, rather than recalculating pilot bootstrap intervals. This pilot checks the protocol
-and noise scale, not the efficacy of adaptive allocation.
+The public release includes the 50 new labels, 20 HTP-MD controls and authors' reference
+summary. Labels are $\ln D$, with $D$ in \si{\angstrom\squared\per\nano\second}.
+The workflow verifies the controls and random system selection, and recalculates percentile
+intervals from 2,000 system-bootstrap resamples (seed 20261014), keeping each system's labels
+together. All estimates and interval endpoints reproduce the reference within $10^{-12}$.
+Pair dispersion is RMS(pair difference)$/\sqrt{2}$; the within-structure estimate pools
+within-system sample variances. This checks the protocol and noise scale, not adaptive allocation.
 
 \section{Predictor split checks}\label{si:sec:ml}
 Chemical-family cross-validation uses Butina clustering with Tanimoto similarity thresholds

@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from comun import originales_cribado
+from piloto import calcular, diferencias, macros, validar_etiquetas
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--sin-conductividad',action='store_true',help='Auditar solo los análisis que no requieren la entrada de conductividad')
@@ -44,7 +45,21 @@ if args.sin_conductividad: print('Conductividad omitida explícitamente en esta 
 
 P=read('piloto_scayle')
 provenance=read('piloto_scayle_procedencia')
-assert hashlib.sha256(Path('resultados/piloto_scayle.json').read_bytes()).hexdigest()==provenance['source_summary_sha256']
+for filename, field in [('etiquetas_piloto.csv', 'source_labels_sha256'),
+                        ('piloto_scayle_referencia.json', 'source_summary_sha256')]:
+    assert hashlib.sha256(Path('resultados', filename).read_bytes()).hexdigest()==provenance[field]
 assert P['corridas']==provenance['completed_runs'] and P['n_sistemas']==provenance['systems']
-assert not provenance['per_run_inputs_included']
-print('Piloto: resumen archivado y procedencia coherentes; bootstrap por corrida no recalculado.')
+assert provenance['per_run_inputs_included']
+labels=pd.read_csv('resultados/etiquetas_piloto.csv')
+validar_etiquetas(labels,T)
+replicas=set(T[T.ns.eq(5) & T.carpeta.str.contains('new_config',na=False)].sistema)
+largas=set(T[T.ns.eq(50) & ~T.literatura].sistema)
+assert len(replicas & largas)==provenance['eligible_systems']
+selected=np.random.default_rng(provenance['system_selection_seed']).choice(
+    sorted(replicas & largas),provenance['systems'],replace=False)
+assert set(labels.sistema)==set(selected)
+recalculated=calcular(labels)
+assert max(diferencias(recalculated,P))<1e-12
+assert max(diferencias(P,read('piloto_scayle_referencia')))<1e-12
+assert Path('paper/numeros_piloto.tex').read_text()==macros(P)
+print('Piloto: 50 corridas, 20 controles, selección aleatoria, bootstrap y macros verificados desde las etiquetas.')

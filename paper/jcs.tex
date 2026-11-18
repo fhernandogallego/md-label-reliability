@@ -730,8 +730,10 @@ scripts that generate every number, table and figure of this paper are available
 this revision, and the raw trajectories are not redistributed. The
 analysis scripts were written with the assistance of Claude (Anthropic) and revised with Codex (OpenAI); the authors reviewed
 and verified the code. The scripts regenerate tables and figures from the released derived inputs.
-The SCAYLE pilot intervals are archived summary results; their per-run inputs are not included
-in the compact-input workflow, so those bootstrap intervals are not independently recomputed there.
+The released SCAYLE pilot labels cover all \pilRuns{} new runs and their original/replica controls.
+The compact-input workflow recalculates the pilot estimates and system-bootstrap intervals,
+checks the controls against the HTP-MD trajectory table, and compares the results with the
+authors' reference summary.
 
 \section*{Supplementary material}
 Supplementary Material associated with this article (data set details and validation of the
@@ -741,13 +743,14 @@ held-out evaluation; within-run slowdown; exploratory ion aggregation; the new S
 real runs) is provided as a separate file.
 
 \section*{CRediT authorship contribution statement}
-\par\noindent\textbf{Francisco Hernando-Gallego:}\par\noindent Conceptualization, Methodology, Software, Formal analysis,
+\par\noindent\textbf{Francisco Hernando-Gallego:}\\*
+Conceptualization, Methodology, Software, Formal analysis,
 Writing (original draft), Supervision.
-\par\noindent\textbf{Dimitar Vasilev-Vasilev:}\par\noindent Software, Data curation, Investigation, Validation, Writing
+\par\noindent\textbf{Dimitar Vasilev-Vasilev:} Software, Data curation, Investigation, Validation, Writing
 (review \& editing).
-\par\noindent\textbf{Diego Garc\'ia-Santos:}\par\noindent Investigation, Validation, Writing (review \& editing).
-\par\noindent\textbf{Alfonso Campo-Camacho:}\par\noindent Validation, Writing (review \& editing).
-\par\noindent\textbf{Alberto G\'omez-G\'omez:}\par\noindent Validation, Writing (review \& editing).
+\par\noindent\textbf{Diego Garc\'ia-Santos:} Investigation, Validation, Writing (review \& editing).
+\par\noindent\textbf{Alfonso Campo-Camacho:} Validation, Writing (review \& editing).
+\par\noindent\textbf{Alberto G\'omez-G\'omez:} Validation, Writing (review \& editing).
 
 \section*{Declaration of competing interest}
 The authors declare that they have no known competing financial interests or personal
