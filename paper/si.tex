@@ -294,6 +294,17 @@ origin-averaged apparent diffusivity at a lag of \SI{25}{\nano\second} from the
 \end{figure}
 
 \section{Prefix-based estimators and stopping rules}\label{si:sec:prefix}
+Prefixes use unwrapped lithium positions after subtracting the whole-system centre of mass.
+The end-point estimator uses only the initial and final frames; the origin-averaged estimator
+is $\Dapp(T/2)$. The linear estimate is one sixth of the MSD slope fitted over $0.2T$ to
+$0.5T$. A power law $\msd=A\tau^{\beta}$ fitted over $0.1T$ to $0.5T$ is extrapolated to
+$\tau_{\mathrm{ref}}$ as $\widehat{\Dapp}=A\tau_{\mathrm{ref}}^{\beta-1}/6$.
+Stopping rules act when the effective exponent exceeds a threshold or an estimate's bootstrap
+coefficient of variation falls below a tolerance. The bootstrap resamples ions and ignores
+correlations between their motions, so the resulting precision is conditional. Runs that never
+meet a rule continue to \SI{50}{\nano\second}; reported mean costs and errors include them.
+Rule settings are chosen on half the systems and evaluated on the other half, over
+\frSplits{} random partitions.
 
 \begin{figure}[!htbp]
 \centering
@@ -388,6 +399,10 @@ The true top set is therefore defined by the expected \SI{5}{\nano\second} label
 not by its long-time diffusivity. Uniform replicates, successive halving and the two-stage
 re-screening use the same model, posterior and selection; only the choice of who receives each
 run differs. All random draws use fixed seeds, given in the code.
+Successive halving allocates additional runs to the current best $4k$, $2k$ and $k$, then
+restarts from $4k$ until the budget is exhausted. Two-stage re-screening fixes its shortlist
+after the first run and spreads the remaining budget evenly within it. Equivalent budgets
+are linearly interpolated from the nondecreasing envelope of Monte Carlo mean recall.
 
 \begin{table}[!htbp]
 \centering
@@ -449,7 +464,7 @@ These are model scenarios, not a full uncertainty interval for savings. Two-stag
 is sensitive to shortlist size; $8k$ is best for the top 1\% in these scenarios. Candidates ranked
 low initially may receive no further information if the shortlist is too short.
 
-\clearpage
+\FloatBarrier
 \section{Check of the adaptive allocation on real runs}\label{si:sec:val-alloc}
 \begin{table}[!htbp]
 \centering

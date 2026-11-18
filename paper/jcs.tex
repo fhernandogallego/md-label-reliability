@@ -50,22 +50,24 @@ Dependence and Adaptive Replicate Allocation}
 \ifconductivityready\else
 \textbf{Working revision: per-trajectory conductivity input pending; conductivity results are excluded.}\par
 \fi
-Molecular dynamics (MD) supplies noisy labels whose values depend on simulation time, for
-materials screening and machine learning. We audit these labels in HTP-MD (\nShort{} runs of
-\SI{5}{\nano\second} and \nLong{} of \SI{50}{\nano\second}), separating dependence on observation
-lag from changes with trajectory age. The first \SI{5}{\nano\second} segment is a median
-\segEndFirst{} times faster than segments at 25--\SI{50}{\nano\second}; concurrent energy and
-polymer-mobility changes support incomplete relaxation. From \nRep{} replicated screening
-systems, one end-point label has reliability \RepEndIcc{} (95\% CI \RepEndIccLo{} to
-\RepEndIccHi), implying a population correlation ceiling of \techoEndCorr{} under an additive
-measurement model. A fingerprint random forest reaches \mlCorr{}; the uncertainty of the ceiling
-precludes a claim of model saturation. Comparisons with same-structure runs attribute about half
-of the run-to-run variance to structure under the assumed decomposition, without establishing
-that this contribution persists indefinitely. In simulated campaigns calibrated with these data,
-adaptive replication matches four uniform replicates using \alEqTopTenUnifFour{} runs per
-candidate for the top 10\% and \alEqTopOneUnifFour{} for the top 1\% by expected \SI{5}{\nano\second}
-label, not by long-time transport. A real-run check cannot confirm the predicted gain. \ifconductivityready Analyses of anion diffusivity and cluster conductivity extend the audit
-within the same dataset.\else Anion diffusivity extends the audit within the same dataset.\fi
+Short molecular-dynamics (MD) runs supply labels for materials screening and machine learning,
+but their uncertainty affects both prediction metrics and simulation-budget decisions. We
+connect these effects in a reproducible output-analysis workflow applied to HTP-MD
+(\nShort{} runs of \SI{5}{\nano\second} and \nLong{} of \SI{50}{\nano\second}). Equal-duration
+segments distinguish trajectory ageing from observation-lag dependence: the first segment is
+a median \segEndFirst{} times faster than segments at 25--\SI{50}{\nano\second}, consistent
+with incomplete relaxation. From \nRep{} replicated screening systems, end-point-label reliability
+is \RepEndIcc{} (95\% CI \RepEndIccLo{} to \RepEndIccHi), implying an additive-model
+population correlation ceiling of \techoEndCorr{}. A fingerprint random forest reaches
+\mlCorr{}, compatible with the uncertain ceiling. Comparisons of dynamical realizations
+conditionally attribute about half of the run-to-run variance to initial structure. A new
+\pilRuns{}-run pilot in \pilN{} systems supports the protocol and dynamical-noise scale.
+In calibrated campaign simulations, adaptive replication matches four uniform replicates using
+\alEqTopTenUnifFour{} runs per candidate for the top 10\% and \alEqTopOneUnifFour{} for the top
+1\% by expected short-run label, not long-time transport. The real-run allocation check
+remains inconclusive.
+\ifconductivityready Anion diffusivity and cluster conductivity extend the audit within the same dataset.
+\else Anion diffusivity extends the audit within the same dataset.\fi
 \end{abstract}
 
 \begin{highlights}
@@ -101,19 +103,20 @@ population prediction metrics~\cite{Brown2009Skepticism,Kramer2012Ki,LageCastell
 In stochastic simulation, incomplete warm-up, independent replications and selection under a
 budget are classical output-analysis problems~\cite{White1997MSER,Hoad2010WarmUp,Alexopoulos1998Output,Kim2006SelectingBest,Chen2000OCBA}.
 
-The question addressed here is how these tools, used together, change the interpretation and use
-of labels from a real screening campaign. We make three contributions. First, we distinguish
-lag dependence of apparent diffusivity from nonstationarity with trajectory age, by comparing
-consecutive segments of equal duration. Second, we express replica variability relative to the
-screening population, estimate its implications for prediction and selection, and compare a
-simple predictor against the uncertain ceiling. Third, we evaluate known replication strategies
-in campaigns calibrated to the measured noise, with a limited check on real runs.
+Building on the HTP-MD variability and denoising study, we ask which decisions are justified by
+a short-run label. The contribution is an empirically calibrated workflow connecting three
+levels of simulation output analysis. At trajectory level, equal-duration segments reveal
+ageing separately from lag dependence, exposing a source of short--long disagreement. At
+population level, replica noise is normalized by the spread of the screening candidates to
+quantify label reliability, prediction ceilings and selection uncertainty. At campaign level,
+the measured noise calibrates comparisons of established replication policies, quantifying the
+budget needed for a specified recall and the cost of sequential decisions. A new \pilRuns{}-run
+pilot checks the protocol and noise scale, and compact public inputs reproduce every stage.
 
-The central target is the expected label of the short-run protocol across initializations, which
-can differ systematically from long-time transport. This distinction separates the precision
-improved by replication from the time-dependent bias it does not necessarily remove. The result
-is a reproducible audit connecting trajectory nonstationarity, population-level label reliability
-and the performance of replication policies under a specified screening objective.
+The common target is the expected label of the short-run protocol across initializations.
+Replication improves its precision, while time-dependent bias can still change the ranking by
+long-time transport. The explicit target connects trajectory auditing, model evaluation and
+budget decisions, and specifies the evidence required in another campaign.
 
 % =============================================================================
 
@@ -236,69 +239,49 @@ to the short run, against the recall $k/n$ of a random choice. Because the two r
 initial structure, this comparison does not sample independent initial structures and can overstate agreement.
 
 \subsection{Truncated trajectories and stopping rules}\label{sec:stopping-method}
-From the raw trajectory of each long run we extract the unwrapped lithium positions, subtract the
-centre-of-mass motion of the whole system as the released library does~\cite{HTPMDcode} (validation
-in the Supplementary Material), truncate the trajectory to its first $T$ nanoseconds and estimate the
-diffusivity from that prefix alone with four estimators: the end-point, the origin-averaged
-$\Dapp(T/2)$, one sixth of the slope of a linear fit to the MSD over $0.2T$ to $0.5T$, the
-conventional procedure~\cite{Maginn2018BestPractices}, and a power law $\msd=A\tau^{\beta}$ fitted
-over $0.1T$ to $0.5T$ and extrapolated to $\tau_{\mathrm{ref}}$, $\widehat{\Dapp}=A\tau_{\mathrm{ref}}^{\beta-1}/6$.
-Estimates are compared with the reference of the full run through the typical multiplicative error
-$\exp(\mathrm{median}\,|\ln(\hat D/D_{\mathrm{ref}})|)$; because the reference shares data with the
-prefix, we repeat the comparison against references at other lags and against the late slope of
-the MSD. Stopping rules stop a run when its effective exponent reaches a threshold or when the
-bootstrap coefficient of variation of an estimate falls below a tolerance; the bootstrap resamples
-ions and does not model correlations between their motions, so its precision is conditional; runs that never stop are
-simulated to \SI{50}{\nano\second}, and cost and error are averaged over all runs. Thresholds are
-chosen on a random half of the systems and evaluated on the other half (\frSplits{} partitions).
+From each long trajectory we extract unwrapped lithium positions, subtract whole-system
+centre-of-mass motion as in the released library~\cite{HTPMDcode}, and analyse its first $T$
+nanoseconds. Four estimators are compared: end-point, origin-averaged, linear MSD slope~\cite{Maginn2018BestPractices}
+and power-law extrapolation. Error is $\exp(\mathrm{median}\,|\ln(\hat D/D_{\mathrm{ref}})|)$;
+alternative reference lags and a late MSD slope test sensitivity to the shared reference data.
+Stopping rules use an exponent threshold or an ion-bootstrap precision tolerance. Thresholds
+are chosen on half the systems and evaluated on the other half (\frSplits{} partitions),
+counting runs that never stop at their full \SI{50}{\nano\second} cost. Fitting windows,
+extrapolation formula and bootstrap assumptions are specified in \cref{si:sec:prefix}.
 
 \subsection{Adaptive allocation of replicates}\label{sec:allocation-method}
-Consider a campaign of $N=\alN$ candidates, a hypothetical population the size of the original
-screening set, with a budget of $b$ \SI{5}{\nano\second} runs per
-candidate on average, whose goal is the top $k$, a ranking-and-selection
-problem~\cite{Kim2006SelectingBest}. The true top set is defined by expected \SI{5}{\nano\second}
-labels across initializations, not by long-time diffusivity. System values are drawn from
-$\mathcal N(0,\sigma_{\mathrm{sys}}^2)$ with $\sigma_{\mathrm{sys}}^2=r\sigma_{\mathrm{run}}^2/(1-r)$,
-and each run adds noise whose standard deviation varies linearly with mobility so as to reproduce
-the measured noise of the slow and fast halves; every replicate starts from a new structure and
-carries the full noise. The unit of cost is therefore a complete new-structure run, which in the
-HTP-MD protocol comprises \SI{5}{\nano\second} of equilibration and \SI{5}{\nano\second} of
-production; budgets and savings below are counted in such runs. A normal prior and a Gaussian approximation
-of the posterior, with the noise evaluated at the observed mean of each candidate rather than at
-its unknown value, give the mean and uncertainty of each candidate. We compare three allocations of the budget. \emph{Uniform}: $b$ runs for every
-candidate. \emph{Successive halving}~\cite{Jamieson2016SuccessiveHalving}: one run for all, then
-further runs for the best $4k$, $2k$ and $k$, in rounds that restart from $4k$ until the budget
-is spent.
-\emph{Boundary-focused}: one run for all, then batches of \alBatchPct\% of $N$ further runs to the
-candidates with the largest $p(1-p)$, where $p$ is the posterior probability of lying above the
-current top-$k$ cut-off (the $k$-th largest posterior mean, treated as fixed within a batch), in the spirit of optimal computing budget
-allocation~\cite{Chen2000OCBA} and of its version for selecting a subset of the best
-designs~\cite{Chen2008OCBAm}. The final selection is the top $k$ by posterior mean, and the
-metric is the recall of the true top $k$, averaged over \alReps{} simulated campaigns (Monte
-Carlo standard error at most \alMCErrMax{} percentage points for these three policies). As a simple reference we add a
-\emph{two-stage re-screening}: one run for all, then the rest of the budget spread evenly over a
-fixed shortlist of the best $2k$, $4k$ or $8k$ after the first run, taking for each budget the best
-of the three shortlists. Equivalent budgets are approximated by linear interpolation of the
-Monte Carlo mean recall curves after taking a nondecreasing envelope. Robustness is checked with the empirical shape of the short-run
-distribution instead of a normal one, with the origin-averaged label, with a constant instead of
-a mobility-dependent noise, with a misestimated reliability (the runs follow the measured noise,
-but the allocation and the selection use the ends of its 95\% interval), and with the true
-reliability at either end of that interval. The algorithm and its parameters are given in the
-Supplementary Material.
+We simulate campaigns of $N=\alN$ candidates, targeting the top $k$ by expected
+\SI{5}{\nano\second} label with a mean budget of $b$ runs per candidate. System values are
+Gaussian, with $\sigma_{\mathrm{sys}}^2=r\sigma_{\mathrm{run}}^2/(1-r)$; independent run noise
+is Gaussian with a mobility-dependent standard deviation calibrated to the slower and faster
+halves of the replicated systems. Every replicate starts from a new structure. One cost unit
+includes both the \SI{5}{\nano\second} equilibration and \SI{5}{\nano\second} production of
+the HTP-MD protocol. A normal prior and plug-in Gaussian posterior, evaluating noise at the
+observed candidate mean, provide candidate means and uncertainties.
 
-The public data allow a partial check on real runs. In the replicated systems, the first run is
-the original screening run and the second starts from a new structure, and \valAlNCamp{} of them
-also have a long run, which starts from the same structure as the first. We use them in two ways,
-First, with noise parameters estimated leaving out the system being evaluated, from one run of
-each system the model predicts the probability that the other run exceeds the top-$k$ cut-off;
-we compare these predictions with what happens (Brier score against the base rate and calibration
-slope). Second, we run a small real campaign: every system receives its first run, and
-\valAlExtra{} second runs go either to the candidates with the largest $p(1-p)$ or to randomly
-chosen ones; the selection is evaluated against the long runs, which are independent of the second
-runs. The campaign noise parameters are fitted to the available campaign pairs, so this is an
-exploratory check rather than independent validation. Its bootstrap refits the noise and reruns
-the complete allocation at a fixed budget; the random control is averaged over 50 placements
-per resample.
+Four policies share this model and final selection by posterior mean. \emph{Uniform}
+replicates every candidate equally. \emph{Successive halving}~\cite{Jamieson2016SuccessiveHalving}
+repeats rounds on the best $4k$, $2k$ and $k$ candidates. \emph{Boundary-focused} allocation,
+in the spirit of computing-budget allocation for ranking and selection~\cite{Kim2006SelectingBest,Chen2000OCBA,Chen2008OCBAm},
+starts with one run per candidate and assigns batches of \alBatchPct\% of $N$ additional runs
+to the largest $p(1-p)$, where $p$ is the posterior probability of exceeding the current
+$k$-th posterior mean. \emph{Two-stage re-screening} spreads the remaining budget uniformly
+over a shortlist fixed after the first run; we report a prespecified $4k$ shortlist and,
+separately, the best of $2k$, $4k$ and $8k$ in hindsight.
+
+Recall is averaged over \alReps{} simulated campaigns (Monte Carlo standard error at most
+\alMCErrMax{} percentage points for the first three policies). Equivalent budgets interpolate
+nondecreasing mean-recall curves. The Supplementary Material specifies the algorithm and checks
+empirical system-value distributions, origin-averaged labels, constant noise, and calibration
+at the ends of the reliability interval (\cref{si:sec:alloc}).
+
+The replicated systems permit two exploratory checks. Leaving out each evaluated system when
+estimating noise, we predict whether its other run exceeds the top-$k$ cut-off and measure
+the Brier score and calibration slope. On the \valAlNCamp{} systems also having a long run,
+we then compare boundary allocation of \valAlExtra{} second runs with random placement.
+Long runs share their initial structure with first runs, whereas second runs start from a
+new structure. Campaign noise is fitted to the available pairs; its bootstrap refits noise
+and reruns allocation at a fixed budget, averaging 50 random placements per resample.
 
 % =============================================================================
 \section{Results and Discussion}\label{sec:results}
@@ -378,7 +361,7 @@ original screening population, the reliability of one end-point label is \RepEnd
 label; the intraclass correlation within the replicated subset agrees (\RepEndIccSub{} and
 \RepAvgIccSub). Roughly half of the variance between screened candidates is therefore noise.
 
-The noise has two comparable sources. The \SI{5}{\nano\second} run of each pair agrees with the
+Under the assumed decomposition, the noise has two comparable sources. The \SI{5}{\nano\second} run of each pair agrees with the
 first \SI{5}{\nano\second} of its long run, which starts from the same structure, to a median
 ratio of \techoEndShortPrefRatio{} with a noise of \techoEndSdDyn, against \RepEndSd{} between
 replicas from different structures: the initial structure accounts for
@@ -386,8 +369,7 @@ replicas from different structures: the initial structure accounts for
 and the dynamics for the rest; on the \techoEndJointN{} systems with both comparisons, resampled
 jointly, the share is \techoEndJointFracStructPct\% (\techoEndJointFracStructLo{} to
 \techoEndJointFracStructHi\%). A new pilot of \pilRuns{} runs in \pilN{} systems gives a compatible
-same-structure dispersion (\pilSdDyn{} in log units; \cref{si:sec:pilot}). This protocol check
-does not validate adaptive allocation or resolve the structural share. The originals, the replicas and the long runs were produced in
+same-structure dispersion (\pilSdDyn{} in log units; \cref{si:sec:pilot}). The originals, the replicas and the long runs were produced in
 different batches of the data set, but none is shifted or differently spread
 (Supplementary Material, after \cref{si:tab:replicas}). Re-sampling the structure and averaging the dynamics both reduce the
 noise. A replicate that starts from a new structure samples both sources, as ensembles of
@@ -434,8 +416,7 @@ two end-point runs give \techoEndRelTwo{}, four give \techoEndRelFour{}, and rea
 
 A fingerprint random forest gives out-of-fold Pearson correlation \mlCorr{} (95\% interval
 \mlCorrLo{} to \mlCorrHi; $R^2=\mlRTwo$) on the same screening population (\cref{tab:ml}).
-This is compatible with the estimated ceiling, but the wide ceiling interval prevents a claim
-that model performance has saturated. Chemical-family splits give \mlFamFineCorr{} and
+Chemical-family splits give \mlFamFineCorr{} and
 \mlFamCoarseCorr{}; their nearest training neighbours still have appreciable similarity
 (Supplementary Material), so they test interpolation within this chemical space.
 
@@ -483,8 +464,7 @@ paired set the short run identifies \PairEndTopTenHits{} of the \PairEndTopTenK{
 separate. Within the \ScrN{} screening polymers the short run still recovers \ScrTopTenHits{} of
 the \ScrTopTenK{} best and \ScrTopTwentyHits{} of the \ScrTopTwentyK{} best, against 10\% and 20\%
 by chance. These recalls are optimistic, because the short and long runs of a pair share their
-initial structure. A short run therefore provides useful coarse screening while uncertain
-differences limit fine ranking.
+initial structure. A short run provides useful coarse screening while uncertain differences limit fine ranking.
 
 The median ratio of \PairEndRatio{} is larger than the \ratioFive{} obtained at the same lag from
 the origin-averaged long curves, and this slowdown explains the gap. The short runs behave like the
@@ -539,47 +519,33 @@ similarly: with the end-point label it is better for the top 1\% at small budget
 (\alHalvingTopOneBOneQuarterEnd\% against \alBoundTopOneBOneQuarterEnd\% with 1.25 runs per
 candidate), and with the origin-averaged label it is worse at larger budgets
 (\alHalvingTopOneBFourAvg\% against \alBoundTopOneBFourAvg\% with four).
-Even a two-stage re-screening, in which the budget left after the first run is spread evenly over
-a fixed shortlist of the best candidates, captures most of the gain: with a shortlist of the best $4k$ fixed in advance it saves
-$\times$\alTwoStageFourkSavingTopOne{} for the top 1\%, $\times$\alTwoStageFourkSavingTopFive{}
-for the top 5\% and $\times$\alTwoStageFourkSavingTopTen{} for the top 10\%, and the best of three
-shortlist sizes in hindsight gives ($\times$\alTwoStageSavingTopOne,
-$\times$\alTwoStageSavingTopFive{} and $\times$\alTwoStageSavingTopTen). Most of the saving therefore comes from not
-spending replicates on candidates that the first run already places far from the cut-off;
-allocating them where the selection is still in doubt adds the rest, and does so without a
-shortlist size to tune. The price is sequential work: in batches of \alBatchPct\% of the
-candidates, matching four uniform replicates takes \alRoundsTopTen{} additional rounds of simulation and
-analysis for the top 10\% and \alRoundsTopOne{} for the top 1\%, against a single extra round
-for the two-stage re-screening. Where each round waits in a queue, the two-stage scheme is the
-practical alternative, but its saving depends on the shortlist size and should be evaluated
-with that choice fixed in advance. Nor does the saving depend on knowing the
-reliability exactly: planning with $r=\alRelPlanLo$ or $\alRelPlanHi$ instead of \alRelTrue{} gives
-savings of $\times$\alMisLoSavingTopTen{} and $\times$\alMisHiSavingTopTen{} for the top 10\%
-(\cref{si:tab:alloc-checks}), and if the true reliability lies at either end of its interval the
-saving is $\times$\alTrueLoSavingTopTen{} to $\times$\alTrueHiSavingTopTen{} for the top 10\% and
-$\times$\alTrueLoSavingTopOne{} to $\times$\alTrueHiSavingTopOne{} for the top 1\%. The result holds with the empirical distribution of the
-short runs and with the origin-averaged label, and knowing that slow systems are noisier does not
-improve the allocation (Supplementary Material). For the expected short-run target and this noise model, an initial run followed by selective
-new-structure replication is preferable to uniform replication at the tested budgets.
+A single re-screening round captures most of the gain. With a shortlist of the best $4k$
+fixed in advance, savings are $\times$\alTwoStageFourkSavingTopOne{} for the top 1\%,
+$\times$\alTwoStageFourkSavingTopFive{} for the top 5\% and
+$\times$\alTwoStageFourkSavingTopTen{} for the top 10\%. Most savings therefore come from
+withholding replicas from candidates far from the cut-off. Boundary allocation avoids tuning
+a shortlist size, but matching four uniform replicates requires \alRoundsTopTen{} additional
+simulation rounds for the top 10\% and \alRoundsTopOne{} for the top 1\%, versus one for
+two-stage re-screening. Queueing and orchestration costs can favour the simpler policy.
 
-These gains are predictions of the noise model, since the public data contain at most two runs per
-system; the replicated systems allow only a partial check, which is consistent with them but has
-little statistical power (\cref{si:tab:val-alloc}). The
-model's probabilities of exceeding the top-10\% cut-off are informative on real runs, improving the
-Brier score of the base rate by \valAlBrierGainTen\% with a calibration slope of
-\valAlCalSlopeTen{} (95\% interval \valAlCalSlopeLoTen{} to \valAlCalSlopeHiTen). In the real
-campaign on \valAlNCamp{} systems, sending the \valAlExtra{} second runs to the boundary recovers
-\valAlBoundTen\% of the top 10\% according to the long runs, as many as giving a second run to
-every system (\valAlBothTen\%), against \valAlRandomTen\% for randomly placed second runs and
-\valAlOnlyATen\% with first runs only. With \valAlKTen{} systems in the top set the difference from
-random placement is not significant (95\% interval from $\valAlDiffLoTen$ to
-$+\valAlDiffHiTen$ percentage points), and for the top 20\% no strategy improves on the first run
-alone. The long runs share their structure with the first runs, which probably favours the first
-run over any second run from a new structure, by an amount we cannot quantify. The calibration
-check, in turn, concerns a second noisy run rather than the latent value that the allocation
-targets. Noise parameters for the campaign are fitted to the available campaign pairs. The real
-runs therefore do not contradict the simulated gains, but they cannot show that
-adaptive allocation beats random placement.
+The pattern persists with empirical system-value distributions and origin-averaged labels.
+Planning at either end of the estimated reliability interval changes the top-decile savings
+to $\times$\alMisLoSavingTopTen{} and $\times$\alMisHiSavingTopTen{}; changing the true
+reliability to those endpoints gives $\times$\alTrueLoSavingTopTen{} to
+$\times$\alTrueHiSavingTopTen{} (\cref{si:tab:alloc-checks}). These are conditional model
+scenarios; the full comparisons and shortlist sensitivity are in the Supplementary Material.
+
+The real-run check is informative but inconclusive (\cref{si:tab:val-alloc}). Predictions of
+whether another run exceeds the top-decile cut-off improve the Brier score over the base rate
+by \valAlBrierGainTen\%, with calibration slope \valAlCalSlopeTen{} (95\% interval
+\valAlCalSlopeLoTen{} to \valAlCalSlopeHiTen). In the campaign on \valAlNCamp{} systems,
+placing \valAlExtra{} second runs at the boundary recovers \valAlBoundTen\% of the top decile
+according to the long runs, against \valAlRandomTen\% for random placement and
+\valAlOnlyATen\% for first runs alone. The difference from random placement spans
+$\valAlDiffLoTen$ to $+\valAlDiffHiTen$ percentage points, and no policy improves on first
+runs for the top 20\%. Shared initial structures favour the first-run reference comparison;
+noise is also fitted to the campaign pairs. The data therefore cannot confirm superiority
+over random placement.
 
 \begin{figure}[ht]
 \centering
@@ -607,9 +573,8 @@ Anion labels are more reliable than lithium labels (\genTfsiRel{} against \genLi
 short--long ranking agreement is higher (\genTfsiRhoScreen{} against \genLiRhoScreen{} among
 screening systems). Correlations against replica means increase for both ions. The conductivity
 has reliability \genCondRel{} (95\% interval \genCondRelLo{} to \genCondRelHi), with predictor
-correlation \genCondMl{} and estimated ceiling \genCondCeil. These point comparisons do not
-identify which chemical information the predictor lacks. Calibrated constant-noise campaigns
-again predict savings from adaptive replication, conditional on their expected-label targets.
+correlation \genCondMl{} and estimated ceiling \genCondCeil. Calibrated constant-noise campaigns again predict savings from adaptive replication
+for their expected-label targets.
 
 Choosing the physical label matters. In screening runs, lithium diffusivity and conductivity have
 rank correlation \genCondVsLiRhoShort{} and their top deciles overlap by
@@ -677,63 +642,57 @@ Estimate equilibrium transport & Extend and test relaxation and lag stability & 
 
 
 \subsection{Limitations}\label{sec:limitations}
-All systems share one force field, one temperature and one salt; the examined transport labels
-are related observables and the numbers are
-specific to this setting, and the workflow, not the values, is what transfers to other campaigns.
-The long runs of the literature polymers were chosen by the dataset's authors; the screening
-systems with a replica (\nRep) or a long run (\nLongScreen) show no detected difference in their marginal labels from the rest of the
-screening set, but they are few and largely the same systems (\techoEndReprOverlap{} in common). The reference lag of \SI{25}{\nano\second} is not a
-converged limit and shares data with the truncated trajectories, so prefix-based errors at long
-$T$ are optimistic. Self-diffusion is only a proxy for conductivity, and the cluster Nernst-Einstein conductivity
-neglects correlations between different clusters~\cite{FranceLanord2019NernstEinstein}; finite-size
-effects~\cite{Yeh2004SystemSize} are not corrected. The boxes are small (\tamBoxMin{} to
-\SI{\tamBoxMax}{\nano\metre} side, \tamChainsMin{} to \tamChainsMax{} chains), so each
-initial structure samples few chain conformations and packings; the structural part of the noise
-may be smaller in larger boxes, which would raise the reliability of a single run. The structural attribution additionally assumes
-independent dynamical histories; shared equilibration and system-specific batch effects cannot
-be excluded. We do not establish that the structural contribution persists at arbitrary run lengths. The noise model rests on \nRep{} replicated
-pairs: the allocation gains are predictions of a model that the real runs, with \valAlNCamp{} systems,
-do not contradict but cannot confirm; a campaign with several replicates per candidate would test
-them directly. No allocation result establishes the best policy for long-time transport when
-short-run biases change the ranking. The observables share trajectories and physical
-information, so their agreement is not independent cross-domain validation. The small SCAYLE
-pilot checks protocol consistency; its annealed structures follow a different preparation and
-it cannot validate the allocation gains (\cref{si:sec:pilot}). The analysis is largely exploratory: windows, thresholds, estimators and strategies
-were compared on the same data, and only the stopping-rule settings were chosen and evaluated on
-separate halves of the systems.
+The numerical results concern one force field, temperature and salt. The related transport
+observables share trajectories and physical information, so their agreement is evidence within
+HTP-MD rather than independent validation in other regimes. Replicated and long-run screening
+subsets have similar marginal labels to the screening population but are small and overlap
+in \techoEndReprOverlap{} systems. Literature polymers were selected deliberately and are
+analysed separately. The \SI{25}{\nano\second} reference is not a converged limit and shares
+data with prefixes, making long-prefix errors optimistic.
+
+Cluster conductivity neglects correlations between distinct clusters~\cite{FranceLanord2019NernstEinstein}.
+Finite-size effects~\cite{Yeh2004SystemSize} are uncorrected. Boxes span \tamBoxMin{} to
+\SI{\tamBoxMax}{\nano\metre} and contain \tamChainsMin{} to \tamChainsMax{} chains; larger
+boxes could change the structural contribution to noise. The decomposition assumes independent
+dynamical histories, while shared equilibration and system-specific batch effects cannot be
+excluded. Structural memory at arbitrary run lengths is unresolved. The \pilRuns{}-run pilot
+checks protocol consistency, but its annealed structures use a different preparation and its
+small sample cannot resolve that decomposition.
+
+Allocation savings are predictions calibrated on \nRep{} pairs, not demonstrated savings for
+ranking equilibrium transport. The \valAlNCamp{}-system real-run check cannot confirm them;
+several independent replicas per candidate would permit a direct test. The analysis is largely
+exploratory: windows, estimators and policies were compared on the same data. Only stopping-rule
+settings were selected and evaluated on separate halves of the systems.
 
 % =============================================================================
 \section{Conclusions}\label{sec:conclusion}
-This audit separates two limitations of short MD labels: their mobility depends on observation
-lag and decreases with trajectory age, while independent initializations give substantial
-run-to-run variation. Replica noise accounts for about half the screening-label variance.
-The inferred prediction ceiling is uncertain; a fingerprint model is compatible with it, but
-model saturation is not established. The structural attribution is conditional on the assumed
-noise decomposition and does not prove irreducibility under longer simulation.
+Short MD labels exhibit both trajectory-age dependence and substantial variation across
+initializations. In HTP-MD, replica noise accounts for about half the screening-label variance,
+and a fingerprint predictor is compatible with the uncertain noise ceiling. The new pilot
+supports the protocol and dynamical-noise scale, while the structural attribution remains
+conditional on the assumed decomposition.
 
-Calibrated campaign simulations predict substantial savings from selective replication when the
-objective is the expected short-run label. A single re-screening round retains much of the gain;
-the available real runs cannot confirm superiority over random placement. These savings do not
-establish recovery of the best equilibrium transport properties. The related transport-label analyses support the usefulness of the audit within this dataset, while their
-numerical reliabilities differ. The transferable contribution is a procedure for specifying the
-label, measuring its noise and time dependence, and evaluating decisions against the intended
-physical target.
+Calibrated campaign simulations favour selective replication over uniform allocation for the
+expected short-run label; a single re-screening round retains much of the gain. Available real
+runs cannot confirm that advantage or establish the best policy for equilibrium transport.
+The contribution is a reproducible procedure linking label definition, measured uncertainty,
+predictive evaluation and simulation-budget decisions. Applying it elsewhere requires a
+campaign-specific noise audit and an explicit physical target.
 
-
+% =============================================================================
 
 \section*{Data and code availability}
-The HTP-MD trajectories and curves are publicly available from the Toyota Research Institute
-platform~\cite{Xie2023HTPMD}. The analysis scripts, the per-trajectory result tables and the
-scripts that generate every number, table and figure of this paper are available at
-\url{https://github.com/fhernandogallego/md-label-reliability} with the original analysis snapshot archived on Zenodo
-(\url{https://doi.org/10.5281/zenodo.23483460}); the revised scripts and derived inputs accompany
-this revision, and the raw trajectories are not redistributed. The
-analysis scripts were written with the assistance of Claude (Anthropic) and revised with Codex (OpenAI); the authors reviewed
-and verified the code. The scripts regenerate tables and figures from the released derived inputs.
-The released SCAYLE pilot labels cover all \pilRuns{} new runs and their original/replica controls.
-The compact-input workflow recalculates the pilot estimates and system-bootstrap intervals,
-checks the controls against the HTP-MD trajectory table, and compares the results with the
-authors' reference summary.
+HTP-MD trajectories and curves are available from the Toyota Research Institute
+platform~\cite{Xie2023HTPMD}. The scripts and derived inputs for this submission are fixed in
+version 1.0.8 (18 November 2026):
+\url{https://github.com/fhernandogallego/md-label-reliability/tree/v1.0.8}.
+The earlier Zenodo snapshot (\url{https://doi.org/10.5281/zenodo.23483460}) predates this revision.
+Raw trajectories are not redistributed. Released inputs reproduce the tables and figures,
+including the \pilRuns{} new pilot labels, their controls and the system-bootstrap intervals.
+The workflow checks those controls against HTP-MD and compares pilot results with the authors'
+reference summary. Scripts were written with Claude (Anthropic) and revised with Codex
+(OpenAI); the authors reviewed and verified the code.
 
 \section*{Supplementary material}
 Supplementary Material associated with this article (data set details and validation of the
