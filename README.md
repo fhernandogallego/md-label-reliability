@@ -5,10 +5,10 @@ Noise Ceilings, Time Dependence and Adaptive Replicate Allocation"* (F. Hernando
 D. García-Santos, A. Campo-Camacho, A. Gómez-Gómez). Preprint: ChemRxiv,
 https://doi.org/10.26434/chemrxiv.15010895/v1.
 
-The JCS submission snapshot is [version 1.0.9](https://github.com/fhernandogallego/md-label-reliability/releases/tag/v1.0.9)
+The JCS submission snapshot is [version 1.0.10](https://github.com/fhernandogallego/md-label-reliability/releases/tag/v1.0.10)
 (18 November 2026). It includes the full conductivity analysis, the reproducible 50-run SCAYLE
 pilot and the allocation analysis with the long run as target. All versions are archived on Zenodo
-under [10.5281/zenodo.23483460](https://doi.org/10.5281/zenodo.23483460); use version 1.0.9 for
+under [10.5281/zenodo.23483460](https://doi.org/10.5281/zenodo.23483460); use version 1.0.10 for
 the present manuscript.
 
 The analysis uses the public HTP-MD collection of polymer electrolyte simulations (Xie et al., *Nat. Commun.*
@@ -27,7 +27,7 @@ Main scripts: `analizar_curvas.py` (regime and lag dependence), `incertidumbre.p
 noise ceiling, noise sources), `analizar_prefijos.py`, `referencias.py` and `frontera.py` (truncated
 trajectories, stopping rules, cost-error frontier), `segmentos.py` (ageing within runs), `ralentizacion.py` (what slows down with the lithium: anion, polymer
 and energy relaxation), `solvatacion.py` (local polymer environment of lithium and ion aggregation), `asignacion.py` and
-`validacion_asignacion.py` (adaptive replicate allocation and its check on real runs), `objetivo_largo.py` (allocation with the long run as target and power of the real-run check), `ml_demo.py`
+`validacion_asignacion.py` (adaptive replicate allocation and its check on real runs), `objetivo_largo.py` (allocation with the long run as target and power of the real-run check), `ampliacion.py` (pilot extension at 393 K and in a 2×2×2 box), `ml_demo.py`
 (random forest against the noise ceiling), `generalidad.py` (the same analyses for the anion diffusivity and the ionic conductivity), `toc.py` (table-of-contents graphic);
 `comun.py` holds the shared random seed. Script comments are in Spanish.
 

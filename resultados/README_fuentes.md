@@ -52,3 +52,14 @@ the original pilot analysis; they are not interchangeable variance-component est
 The raw pilot trajectories are not redistributed. The compact labels suffice to reproduce the
 reported statistics, but do not independently validate trajectory processing. This small protocol
 check does not validate adaptive allocation or identify an irreducible structural variance component.
+
+## SCAYLE pilot extension
+
+`etiquetas_ampliacion.csv` holds per-run labels (ln D in Å²/ns, end-point and origin-averaged at
+T/2) for runs that reuse the pilot starting structures: two runs at 393 K in each of the 10 pilot
+systems, two runs in a 2×2×2 replicated box in 4 of them, and two runs from structures generated
+with the HTP-MD equilibration protocol in 3 of them (not used in the manuscript). It also repeats
+the HTP-MD control labels of those systems. `ampliacion.py` computes the ratios, dynamic-noise
+estimates and system-bootstrap intervals (`ampliacion.json`, `paper/numeros_ampliacion.tex`).
+With these sample sizes the intervals are descriptive. The replicated box keeps the starting
+structure, so these runs do not test the structural share of the noise.

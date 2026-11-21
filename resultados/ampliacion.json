@@ -1,0 +1,184 @@
+{
+ "extremos": {
+  "htpeq": {
+   "razon_frente_a_misma_estructura": {
+    "valor": 0.7907009602086182,
+    "ic95": [
+     0.5442554160243237,
+     1.310359198175813
+    ],
+    "n_sistemas": 3
+   },
+   "sd_entre_estructuras_nuevas": {
+    "valor": 0.460581880073814,
+    "ic95": [
+     0.0012821469229670403,
+     0.7745972056195167
+    ],
+    "n_sistemas": 3
+   },
+   "sd_replicas_htpmd_mismos_sistemas": {
+    "valor": 0.22341984396124218,
+    "ic95": [
+     0.07751864203312227,
+     0.3339705042414003
+    ],
+    "n_sistemas": 3
+   },
+   "razon_recocido_mismos_sistemas": {
+    "valor": 0.6628063993563724,
+    "ic95": [
+     0.5459754225150015,
+     0.8515705034828741
+    ],
+    "n_sistemas": 3
+   }
+  },
+  "T393": {
+   "razon_D_393_353": {
+    "valor": 2.2014802155396205,
+    "ic95": [
+     1.7971928264840815,
+     2.6555991197070776
+    ],
+    "n_sistemas": 10
+   },
+   "sd_dinamica_393": {
+    "valor": 0.2487051562132393,
+    "ic95": [
+     0.1230450235370416,
+     0.3453362176224168
+    ],
+    "n_sistemas": 10
+   },
+   "sd_dinamica_353": {
+    "valor": 0.2332360369985013,
+    "ic95": [
+     0.1936520642034817,
+     0.2678379007450585
+    ],
+    "n_sistemas": 10
+   },
+   "spearman_orden_353_393": 0.7575757575757575,
+   "energia_activacion_kJmol_aparente": 22.754422426066217
+  },
+  "caja2": {
+   "razon_D_grande_original": {
+    "valor": 1.074602096949831,
+    "ic95": [
+     0.9544122952510216,
+     1.241598239021636
+    ],
+    "n_sistemas": 4
+   },
+   "sd_dinamica_caja_grande": {
+    "valor": 0.1316904645749973,
+    "ic95": [
+     0.08706399397933397,
+     0.16133183436380447
+    ],
+    "n_sistemas": 4
+   },
+   "sd_dinamica_caja_original": {
+    "valor": 0.19431603394410932,
+    "ic95": [
+     0.1593498794643792,
+     0.22434651321412818
+    ],
+    "n_sistemas": 4
+   },
+   "esperado_si_solo_estadistico": "×1/√8 ≈ 0,35 del ruido en caja original"
+  }
+ },
+ "medio": {
+  "htpeq": {
+   "razon_frente_a_misma_estructura": {
+    "valor": 0.8079099019259793,
+    "ic95": [
+     0.60888921910479,
+     0.9834343477254848
+    ],
+    "n_sistemas": 3
+   },
+   "sd_entre_estructuras_nuevas": {
+    "valor": 0.347271355329105,
+    "ic95": [
+     0.04378332233824259,
+     0.5292622875266906
+    ],
+    "n_sistemas": 3
+   },
+   "sd_replicas_htpmd_mismos_sistemas": {
+    "valor": 0.13965128344502464,
+    "ic95": [
+     0.031214615386375405,
+     0.20717694603477335
+    ],
+    "n_sistemas": 3
+   },
+   "razon_recocido_mismos_sistemas": {
+    "valor": 0.6312601786985724,
+    "ic95": [
+     0.5162409907168083,
+     0.7629134376601938
+    ],
+    "n_sistemas": 3
+   }
+  },
+  "T393": {
+   "razon_D_393_353": {
+    "valor": 1.9713428477013384,
+    "ic95": [
+     1.7104818146629357,
+     2.2454584615223654
+    ],
+    "n_sistemas": 10
+   },
+   "sd_dinamica_393": {
+    "valor": 0.19246227285513892,
+    "ic95": [
+     0.08546460842794175,
+     0.27685719377615453
+    ],
+    "n_sistemas": 10
+   },
+   "sd_dinamica_353": {
+    "valor": 0.18265268665680134,
+    "ic95": [
+     0.14376122936113042,
+     0.21508989131010994
+    ],
+    "n_sistemas": 10
+   },
+   "spearman_orden_353_393": 0.8787878787878788,
+   "energia_activacion_kJmol_aparente": 19.57062547590762
+  },
+  "caja2": {
+   "razon_D_grande_original": {
+    "valor": 0.9807552079350744,
+    "ic95": [
+     0.9341387839383539,
+     1.0369977817260592
+    ],
+    "n_sistemas": 4
+   },
+   "sd_dinamica_caja_grande": {
+    "valor": 0.08319189192131957,
+    "ic95": [
+     0.026266015426684254,
+     0.12595790066445695
+    ],
+    "n_sistemas": 4
+   },
+   "sd_dinamica_caja_original": {
+    "valor": 0.1605591173728303,
+    "ic95": [
+     0.13299437886524904,
+     0.17587816020119307
+    ],
+    "n_sistemas": 4
+   },
+   "esperado_si_solo_estadistico": "×1/√8 ≈ 0,35 del ruido en caja original"
+  }
+ }
+}

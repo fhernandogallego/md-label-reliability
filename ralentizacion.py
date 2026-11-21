@@ -169,6 +169,15 @@ def escribir_tex(R):
             M[f"slowCorr{n}"] = f2(C[c]["spearman"]); M[f"slowCorr{n}Lo"], M[f"slowCorr{n}Hi"] = (f2(u) for u in C[c]["ic95"])
     S = json.load(open("resultados/segmentos.json"))["extremos"]          # el Li, con el mismo intervalo que el texto principal
     M["slowLiLo"], M["slowLiHi"] = (f2(u) for u in S["primero_vs_tardios_ic95"])
+    # ¿Envejecen más los sistemas lentos? Spearman entre la ralentización del Li y ln D de la corrida larga (D_app a 25 ns)
+    Dm = pd.read_csv("resultados/ralentizacion_por_sistema.csv").merge(
+        pd.read_csv("resultados/tabla_por_trayectoria.csv")[["id", "D_medio"]], on="id")
+    rng = np.random.default_rng(SEMILLA)
+    for sub, n in ((Dm, "MobAll"), (Dm[~Dm.literatura], "MobScreen")):
+        x, y = sub.D_li_primero_tardios.to_numpy(), np.log(sub.D_medio.to_numpy())
+        b = [stats.spearmanr(x[i], y[i])[0] for i in (rng.integers(0, len(x), len(x)) for _ in range(N_BOOT))]
+        M[f"slowCorr{n}"] = f2(stats.spearmanr(x, y)[0])
+        M[f"slowCorr{n}Lo"], M[f"slowCorr{n}Hi"] = (f2(u) for u in np.quantile(b, [.025, .975]))
     with open("paper/numeros_ralentizacion.tex", "w") as fh:
         fh.write("% Generado por ralentizacion.py a partir de resultados/ralentizacion.json. No editar a mano.\n")
         for k, v in M.items(): fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")

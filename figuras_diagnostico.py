@@ -37,8 +37,12 @@ axs[0].scatter(x,y,s=16,color=blue,alpha=.8)
 lim=[min(x.min(),y.min())*.8,max(x.max(),y.max())*1.2]
 axs[0].plot(lim,lim,color='0.4',ls='--',lw=1)
 axs[0].set(xscale='log',yscale='log',xlim=lim,ylim=lim,xlabel='Original label (Å²/ns)',ylabel='Replica label (Å²/ns)')
-axs[1].hist(d,bins=15,color=blue,alpha=.8)
+marcas=[t for t in (0.01,0.02,0.05,0.1,0.2,0.5,1,2,5) if lim[0]<=t<=lim[1]]       # marcas legibles en los ejes log
+for eje in (axs[0].xaxis,axs[0].yaxis):
+    eje.set_major_locator(matplotlib.ticker.FixedLocator(marcas));eje.set_major_formatter(matplotlib.ticker.FixedFormatter([f'{t:g}' for t in marcas]))
+    eje.set_minor_formatter(matplotlib.ticker.NullFormatter())
+cuentas,_,_=axs[1].hist(d,bins=15,color=blue,alpha=.8);axs[1].set_ylim(0,cuentas.max()*1.35)   # sitio para la anotación
 axs[1].axvline(0,color='0.4',ls='--',lw=1)
 axs[1].set(xlabel='ln(original / replica)',ylabel='Systems')
-axs[1].text(.98,.95,f'n = {len(x)}\n'+r'$\sigma_{\mathrm{run}}$'+f' = {d.std(ddof=1)/np.sqrt(2):.2f}',ha='right',va='top',transform=axs[1].transAxes)
+axs[1].text(.02,.95,f'n = {len(x)}\n'+r'$\sigma_{\mathrm{run}}$'+f' = {d.std(ddof=1)/np.sqrt(2):.2f} (ln units)',ha='left',va='top',transform=axs[1].transAxes)
 fig.savefig('paper/figures/fig_noise_replicas.pdf');fig.savefig('paper/figures/fig_noise_replicas.png',dpi=180)

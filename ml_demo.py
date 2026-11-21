@@ -226,15 +226,15 @@ sb = lambda r: float(np.sqrt(2 * r / (1 + r)))                             # tec
 rlo, rhi = (v ** 2 for v in (lo1, hi1))
 techo1 = f"{f2(np.sqrt(r1))} ({f2(lo1)} to {f2(hi1)})"; techo2 = f"{f2(np.sqrt(r2))} ({f2(sb(rlo))} to {f2(sb(rhi))})"
 with open("paper/tabla_ml.tex", "w") as fh:
-    fh.write("% Generado por ml_demo.py. No editar a mano.\n\\begin{tabular}{p{0.33\\textwidth}rrr}\n\\toprule\n"
-             "Evaluation target & Systems & Pearson $r$ (95\\% CI) & Ceiling (95\\% CI) \\\\\n\\midrule\n")
-    fh.write(f"One label, system split & {M['mlNSys']} & {M['mlCorr']} ({M['mlCorrLo']} to {M['mlCorrHi']}) & {techo1} \\\\\n")
+    fh.write("% Generado por ml_demo.py. No editar a mano.\n\\begin{tabular}{lrrr}\n\\toprule\n"
+             "Split and evaluation label & Systems & Pearson $r$ (95\\% CI) & Ceiling (95\\% CI) \\\\\n\\midrule\n")
+    fh.write(f"System split, one label & {M['mlNSys']} & {M['mlCorr']} ({M['mlCorrLo']} to {M['mlCorrHi']}) & {techo1} \\\\\n")
     for nn, txt in (("Fine", "fine"), ("Coarse", "coarse")):
-        fh.write(f"{txt.capitalize()} families (Tanimoto $\\geq$ {M[f'mlFam{nn}Sim']}) & {M['mlNSys']} & {M[f'mlFam{nn}Corr']} "
-                 f"({M[f'mlFam{nn}CorrLo']} to {M[f'mlFam{nn}CorrHi']}) & {techo1} \\\\\n")
-    fh.write(f"Replicas, first / second & {M['mlRepN']} & {M['mlRepA']} / {M['mlRepB']} & {techo1} \\\\\n")
+        fh.write(f"Family split, Tanimoto $\\geq$ {M[f'mlFam{nn}Sim']} & {M['mlNSys']} & {M[f'mlFam{nn}Corr']} "
+                 f"({M[f'mlFam{nn}CorrLo']} to {M[f'mlFam{nn}CorrHi']}) & as above \\\\\n")
+    fh.write(f"Replicas, first / second label & {M['mlRepN']} & {M['mlRepA']} / {M['mlRepB']} & as above \\\\\n")
     lo, hi = R["replicados"]["pearson_media_ic95"]
-    fh.write(f"Mean of two replicas & {M['mlRepN']} & {M['mlRepMean']} ({f2(lo)} to {f2(hi)}) & {techo2} \\\\\n")
+    fh.write(f"Replicas, mean of two labels & {M['mlRepN']} & {M['mlRepMean']} ({f2(lo)} to {f2(hi)}) & {techo2} \\\\\n")
     fh.write("\\bottomrule\n\\end{tabular}\n")
 
 print(f"sistemas {R['n_sistemas']} (fallos de SMILES {fallos}); techo √r = {np.sqrt(r1):.2f}")

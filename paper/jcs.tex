@@ -114,7 +114,9 @@ MD uncertainty analysis~\cite{Grossfield2018BestPractices,Maginn2018BestPractice
 learning~\cite{Frenay2014LabelNoise} provide established tools. Replicate variability also bounds
 population prediction metrics~\cite{Brown2009Skepticism,Kramer2012Ki,LageCastellanos2019NoiseCeiling}.
 In stochastic simulation, incomplete warm-up, independent replications and selection under a
-budget are classical output-analysis problems~\cite{White1997MSER,Hoad2010WarmUp,Alexopoulos1998Output,Kim2006SelectingBest,Chen2000OCBA}.
+budget are classical output-analysis problems~\cite{White1997MSER,Hoad2010WarmUp,Alexopoulos1998Output,Kim2006SelectingBest,Chen2000OCBA},
+and the choice between replicating evaluated designs and exploring new ones has been studied for
+stochastic simulation metamodels~\cite{Ankenman2010StochasticKriging,Binois2019Replication}.
 
 Building on the HTP-MD variability and denoising study, we ask which decisions are justified by
 a short-run label. The contribution is an empirically calibrated workflow connecting three
@@ -264,7 +266,8 @@ observed candidate mean, provide candidate means and uncertainties.
 Four policies share this model and final selection by posterior mean. \emph{Uniform}
 replicates every candidate equally. \emph{Successive halving}~\cite{Jamieson2016SuccessiveHalving}
 repeats rounds on the best $4k$, $2k$ and $k$ candidates. \emph{Boundary-focused} allocation,
-in the spirit of computing-budget allocation for ranking and selection~\cite{Kim2006SelectingBest,Chen2000OCBA,Chen2008OCBAm},
+in the spirit of computing-budget allocation for ranking and selection~\cite{Kim2006SelectingBest,Chen2000OCBA,Chen2008OCBAm}
+and of top-$k$ identification in stochastic multi-armed bandits~\cite{Kalyanakrishnan2012PAC},
 starts with one run per candidate and assigns batches of \alBatchPct\% of $N$ additional runs
 to the largest $p(1-p)$, where $p$ is the posterior probability of exceeding the current
 $k$-th posterior mean. \emph{Two-stage re-screening} spreads the remaining budget uniformly
@@ -345,6 +348,19 @@ system.
 The effect is stronger for the screening polymers (\segEndFirstScreen) than for those taken from
 the literature (\segEndFirstLit).
 
+Three readings of this slowdown should be distinguished. It may be incomplete relaxation of the
+prepared structure, which a longer or adaptive equilibration would remove. At \SI{353}{\kelvin}
+some screening polymers may instead lie below their glass transition, where physical ageing
+continues over any accessible simulation time, so a longer equilibration would delay it without
+ending it. Both readings predict more ageing in slower systems, and the slowdown does grow as the
+long-run mobility falls (Spearman \slowCorrMobAll, 95\% interval \slowCorrMobAllLo{} to
+\slowCorrMobAllHi; \slowCorrMobScreen{} within the screening polymers). Part of the slowdown may
+also come from the protocol: production runs at a fixed volume taken from the preceding
+equilibration, and the pressure falls by \slowPress{}~atm between the first and the late segments,
+so the box may not match the density towards which the system relaxes; the pressure change
+correlates only weakly with the lithium slowdown (\slowCorrPress). These data cannot separate the
+three readings, and all of them bias short labels in the same direction.
+
 
 \begin{figure}[ht]
 \centering
@@ -352,7 +368,8 @@ the literature (\segEndFirstLit).
 \caption{Lag dependence of lithium mobility. Left: effective MSD exponents in short and long
 runs, with the operational threshold 0.9 and diffusive exponent 1 marked separately.
 Middle: $\Dapp(\tau)/\Dapp(25\,\mathrm{ns})$ in the long runs (median and 10th--90th percentiles).
-Right: ranking correlation with the 25 ns reference. Lag comparisons share trajectory data.}
+Right: ranking correlation with the 25 ns reference. All lags in the middle and right panels come
+from the same trajectories, so they are not independent estimates.}
 \label{fig:regime}\label{fig:long}
 \end{figure}
 
@@ -387,7 +404,10 @@ same-structure dispersion (\pilSdDyn{} in log units; \cref{si:sec:pilot}). In th
 re-runs with the same velocities disperse less (\pilSdExact) than runs with new velocities
 (\pilSdNewVel), and the screening-pair value \techoEndSdDyn{} matches the latter, so it does not
 look reduced by a shared dynamical history. The pilot is too small to test the structural share
-itself. The originals, the replicas and the long runs were produced in
+itself. Further runs from the same structures give a similar dynamic noise at
+\SI{393}{\kelvin} (\ampEndTSdHot{} against \ampEndTSdRef), and an eight-fold larger box lowers it
+only as much as averaging about \ampEndBoxEquivRuns{} runs of the original size, without changing
+the diffusivity (ratio \ampEndBoxRatio; \cref{si:sec:extension}). The originals, the replicas and the long runs were produced in
 different batches of the data set, but none is shifted or differently spread
 (Supplementary Material, after \cref{si:tab:replicas}). Re-sampling the structure and averaging the dynamics both reduce the
 noise. A replicate that starts from a new structure samples both sources, as ensembles of
@@ -473,10 +493,12 @@ $n$ runs, model-implied population correlation ceiling, and Gaussian-model recal
 
 \begin{table}[ht]
 \centering
-\caption{Out-of-sample correlation of a random forest on monomer fingerprints with short-run
-labels (cross-validation split by system, or by chemical family of the monomer), against the
-noise ceiling of each label. The ceilings and their intervals rest on the run-to-run noise of
-the \nRep{} replicated systems, not on the \mlNSys{} systems of the first rows.}\label{tab:ml}
+\caption{Out-of-sample correlation of one random forest on monomer fingerprints with end-point
+short-run labels, for cross-validation split by system or by chemical family of the monomer
+(first three rows), and for the same predictions evaluated on the \nRep{} replicated systems
+against each of their two labels or their mean (last two rows). The ceiling is the population
+correlation implied by the reliability of the evaluation label; its interval rests on the
+run-to-run noise of the \nRep{} replicated systems, not on the \mlNSys{} systems.}\label{tab:ml}
 {\small\setlength{\tabcolsep}{3pt}\input{tabla_ml}}
 \end{table}
 
@@ -582,8 +604,8 @@ per candidate, for four ways of allocating the budget (\alReps{} simulated campa
 candidates with the measured noise; each run starts from a new, equilibrated structure). The
 true top set is the top $k$ by the expected \SI{5}{\nano\second} label of each system, not by its
 long-time diffusivity. The two-stage shortlist is fixed at $4k$. Bands show 95\% Monte Carlo
-intervals conditional on the calibrated model; markers show boundary budgets matching four
-uniform replicates.}\label{fig:allocation}
+intervals conditional on the calibrated model; markers show the mean budget with which
+boundary-focused allocation reaches the recall of four uniform replicates.}\label{fig:allocation}
 \end{figure}
 
 
@@ -631,7 +653,8 @@ conductivity input can be recovered and recalculated on the same population.
 \caption{Results for the origin-averaged ion diffusivities at half the run length
 \ifconductivityready and the platform's cluster conductivity\fi.
 The population is one original label per screening system; noise comes from \nRep{} replica pairs.
-Allocation uses constant noise and targets expected short-run labels.}\label{tab:general}
+Predicted: correlation implied by the measurement model. Allocation uses constant noise and
+targets expected short-run labels.}\label{tab:general}
 \resizebox{\textwidth}{!}{\input{tabla_generalidad}}
 \end{table}
 
@@ -642,7 +665,9 @@ stationary energy alone does not establish transport convergence. Report the est
 MSD regime. Prefer origin-averaged labels and distinguish within-run precision from accuracy
 against a long-time coefficient. Choose the physical target explicitly: lithium self-mobility
 and conductivity rank different candidates because correlated ion motion can carry little net
-charge~\cite{FranceLanord2019NernstEinstein}.
+charge~\cite{FranceLanord2019NernstEinstein}. To gain precision, replicate rather than enlarge the
+box: in our checks an eight-fold larger box, at least eight times as costly per run, reduced the
+noise only as much as averaging about \ampEndBoxEquivRuns{} runs of the original size.
 
 \begin{table}[ht]
 \centering
@@ -657,7 +682,7 @@ Coarse screening & One short run; use an origin-averaged label & Similar candida
 \addlinespace
 Select by expected short-run label & Replicate uncertain candidates; use a fixed shortlist if sequential rounds are costly & Savings persist against the long-run reference in calibrated simulations, but are not validated on real campaigns \\
 \addlinespace
-Compare similar candidates & Use independent initial structures & Replication reduces variance, not necessarily temporal bias \\
+Compare similar candidates & Use independent initial structures rather than larger boxes & Replication reduces variance, not necessarily temporal bias \\
 \addlinespace
 Evaluate a learned model & Split by system; use replicated test labels & The estimated population ceiling is uncertain and model-dependent \\
 \addlinespace
@@ -669,7 +694,8 @@ Estimate equilibrium transport & Extend and test relaxation and lag stability & 
 
 
 \subsection{Limitations}\label{sec:limitations}
-The numerical results concern one force field, temperature and salt. The related transport
+The numerical results concern one force field and salt, and one temperature except for a
+check at \SI{393}{\kelvin} on \ampTN{} systems. The related transport
 observables share trajectories and physical information, so their agreement is evidence within
 HTP-MD rather than independent validation in other regimes. Replicated and long-run screening
 subsets have similar marginal labels to the screening population but are small and overlap
@@ -678,7 +704,9 @@ analysed separately. The \SI{25}{\nano\second} reference is not a converged limi
 data with prefixes, making long-prefix errors optimistic.
 
 Cluster conductivity neglects correlations between distinct clusters~\cite{FranceLanord2019NernstEinstein}.
-Finite-size effects~\cite{Yeh2004SystemSize} are uncorrected. Boxes span \tamBoxMin{} to
+Finite-size effects~\cite{Yeh2004SystemSize} are uncorrected; an eight-fold larger box changed
+the diffusivity by a factor \ampEndBoxRatio{} (\ampEndBoxRatioLo{} to \ampEndBoxRatioHi) in \ampBoxN{}
+systems. Boxes span \tamBoxMin{} to
 \SI{\tamBoxMax}{\nano\metre} and contain \tamChainsMin{} to \tamChainsMax{} chains; larger
 boxes could change the structural contribution to noise. The decomposition assumes independent
 dynamical histories, while shared equilibration and system-specific batch effects cannot be
@@ -717,8 +745,8 @@ campaign-specific noise audit and an explicit physical target.
 \section*{Data and code availability}
 HTP-MD trajectories and curves are available from the Toyota Research Institute
 platform~\cite{Xie2023HTPMD}. The scripts and derived inputs for this submission are fixed in
-version 1.0.9 (18 November 2026):
-\url{https://github.com/fhernandogallego/md-label-reliability/tree/v1.0.9}, archived on Zenodo
+version 1.0.10 (18 November 2026):
+\url{https://github.com/fhernandogallego/md-label-reliability/tree/v1.0.10}, archived on Zenodo
 under \url{https://doi.org/10.5281/zenodo.23483460}, which lists every version.
 Raw trajectories are not redistributed. Released inputs reproduce the tables and figures,
 including the \pilRuns{} new pilot labels, their controls and the system-bootstrap intervals.

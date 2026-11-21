@@ -268,6 +268,49 @@ together. All estimates and interval endpoints reproduce the reference within $1
 Pair dispersion is RMS(pair difference)$/\sqrt{2}$; the within-structure estimate pools
 within-system sample variances. This checks the protocol and noise scale, not adaptive allocation.
 
+\section{Higher temperature and larger box}\label{si:sec:extension}
+Two further sets of runs reuse the starting structures of the pilot. At \SI{393}{\kelvin}, two runs
+per system with new velocities (\SI{2}{\nano\second} of constant-pressure equilibration at
+\SI{1}{atm}, then \SI{5}{\nano\second} of production) were made for the \ampTN{} pilot systems. In
+\ampBoxN{} of them, the starting structure was replicated $2\times2\times2$ (eight times the atoms
+and ions), decorrelated for \SI{1}{\nano\second} with new velocities, and two production runs of
+\SI{5}{\nano\second} were made. The reference for each system is the mean of its four
+\SI{353}{\kelvin} labels from the same structure (original, exact re-run and two new-velocity
+runs). Intervals are system-bootstrap percentiles and, with these sample sizes, descriptive.
+
+\begin{table}[ht]
+\centering
+\caption{Higher temperature and larger box: ratio of the diffusivity to the reference from the
+same structure, and dynamic noise (SD of $\ln D$ between runs from the same structure).}\label{si:tab:extension}
+\resizebox{\textwidth}{!}{\begin{tabular}{lrr}
+\toprule
+ & End-point & Origin-averaged \\
+\midrule
+\SI{393}{\kelvin}, $D_{393}/D_{353}$ (\ampTN{} systems) & \ampEndTRatio{} (\ampEndTRatioLo{} to \ampEndTRatioHi) & \ampAvgTRatio{} (\ampAvgTRatioLo{} to \ampAvgTRatioHi) \\
+\quad dynamic noise, \SI{393}{\kelvin} / \SI{353}{\kelvin} & \ampEndTSdHot{} / \ampEndTSdRef & \ampAvgTSdHot{} / \ampAvgTSdRef \\
+\quad rank correlation of system means, \SI{353}{\kelvin} vs \SI{393}{\kelvin} & \ampEndTRho & \ampAvgTRho \\
+Larger box, $D_{\mathrm{large}}/D_{\mathrm{original}}$ (\ampBoxN{} systems) & \ampEndBoxRatio{} (\ampEndBoxRatioLo{} to \ampEndBoxRatioHi) & \ampAvgBoxRatio{} (\ampAvgBoxRatioLo{} to \ampAvgBoxRatioHi) \\
+\quad dynamic noise, large / original box & \ampEndBoxSdBig{} / \ampEndBoxSdRef & \ampAvgBoxSdBig{} / \ampAvgBoxSdRef \\
+\quad equivalent number of averaged original-box runs & \ampEndBoxEquivRuns & \ampAvgBoxEquivRuns \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The diffusivity roughly doubles at \SI{393}{\kelvin} (apparent activation energy about
+\SI{\ampEndTEa}{\kilo\joule\per\mole}), while the dynamic noise on the logarithmic scale is similar,
+so its scale is not specific to \SI{353}{\kelvin}. The reliability at \SI{393}{\kelvin} would also
+depend on the spread of the screening population at that temperature, which these runs do not
+measure. The larger box leaves the
+diffusivity unchanged within the intervals, so finite-size effects are small at this size. Its
+dynamic noise falls by less than the factor $1/\sqrt{8}$ expected if each ion contributed
+independently (\ampStatNoise{} for the end-point label). Either part of the noise is collective, or
+the eight copies, which start from the same configuration and are decorrelated for only
+\SI{1}{\nano\second}, remain partly correlated; with \ampBoxN{} systems the two cannot be told apart.
+In either case an eight-fold larger system, which costs at least eight times more per run, is
+worth about \ampEndBoxEquivRuns{} averaged runs of the original size.
+Because the replicated box keeps the starting structure, these runs do not test the structural
+share.
+
 \section{Predictor split checks}\label{si:sec:ml}
 Chemical-family cross-validation uses Butina clustering with Tanimoto similarity thresholds
 \mlFamFineSim{} (\mlFamFineGroups{} groups) and \mlFamCoarseSim{} (\mlFamCoarseGroups{} groups).

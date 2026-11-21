@@ -86,3 +86,17 @@ for top in ['0.1','0.01']:
         assert abs(e['uniforme'][b]-ref)<0.03,(top,b,e['uniforme'][b],ref)
 assert 0<OL['rho']['valor']<=1.05 and OL['potencia']['0.1']['potencia_5pct']<0.5
 print(f"Objetivo largo: ρ = {OL['rho']['valor']:.2f}; con ρ = 1 reproduce la simulación principal; potencia de la campaña real {OL['potencia']['0.1']['potencia_5pct']:.2f}.")
+
+# Ampliación: mismos sistemas que el piloto, controles iguales a la tabla de HTP-MD y macros coherentes con el JSON
+EA=pd.read_csv('resultados/etiquetas_ampliacion.csv')
+assert set(EA.sistema)<=set(labels.sistema)
+cortas5=T[T.ns.eq(5)]
+for modo,replica in [('htpmd_original',False),('htpmd_replica',True)]:
+    ctl=EA[EA.modo.eq(modo)].set_index('sistema')
+    src=cortas5[cortas5.carpeta.str.contains('new_config',na=False).eq(replica)].set_index('sistema').loc[ctl.index]
+    assert np.allclose(ctl.extremos,np.log(src.D_extremos),atol=1e-12) and np.allclose(ctl.medio,np.log(src.D_medio),atol=1e-12)
+AM=read('ampliacion')
+macros_amp=Path('paper/numeros_ampliacion.tex').read_text()
+assert f"\\newcommand{{\\ampTN}}{{{AM['extremos']['T393']['razon_D_393_353']['n_sistemas']}}}" in macros_amp
+assert f"\\newcommand{{\\ampEndTRatio}}{{{AM['extremos']['T393']['razon_D_393_353']['valor']:.1f}}}" in macros_amp
+print(f"Ampliación: {EA.sistema.nunique()} sistemas del piloto, controles HTP-MD verificados, macros coherentes.")

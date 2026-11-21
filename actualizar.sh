@@ -51,6 +51,7 @@ run frontera.py
 run techo.py
 run auditoria_muestra.py
 run piloto.py
+run ampliacion.py
 if [[ $REUSE_CAMPAIGNS -eq 1 ]]; then run asignacion.py tablas; else run asignacion.py; fi
 run validacion_asignacion.py
 run objetivo_largo.py
