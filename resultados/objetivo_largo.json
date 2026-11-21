@@ -1,7 +1,7 @@
 {
  "N": 6003,
  "n_mc": 100,
- "n_mc_potencia": 2000,
+ "n_mc_detectabilidad": 2000,
  "semilla": 20261118,
  "rho": {
   "n": 92,
@@ -141,7 +141,7 @@
    "ahorro_frente_a_4": 2.1286793435790594
   }
  },
- "potencia": {
+ "detectabilidad": {
   "n_sistemas": 92,
   "segundas": 46,
   "ruido": {
@@ -149,21 +149,28 @@
    "a": 0.35432845783972067,
    "b": -0.06736454860984444
   },
+  "metodo": {
+   "umbral_sd": 1.96,
+   "distribucion_nula_simulada": false,
+   "prueba_bootstrap_real_reproducida": false,
+   "ruido_reajustado_por_campana": false,
+   "extrapolacion_N": "Gaussian approximation with SD proportional to N^(-1/2); not validated across sample sizes."
+  },
   "0.1": {
    "k": 9,
    "ventaja_media": 0.05925777777777779,
    "sd_entre_campanas": 0.0753514998142846,
-   "potencia_5pct": 0.1175,
+   "fraccion_sobre_umbral_196sd": 0.1175,
    "prob_ventaja_no_positiva": 0.218,
-   "sistemas_para_80pct": 1167.5852017878997
+   "n80_aproximado": 1167.5852017878997
   },
   "0.2": {
    "k": 18,
    "ventaja_media": 0.04317111111111111,
    "sd_entre_campanas": 0.048352008400715706,
-   "potencia_5pct": 0.1435,
+   "fraccion_sobre_umbral_196sd": 0.1435,
    "prob_ventaja_no_positiva": 0.1885,
-   "sistemas_para_80pct": 905.8120324106752
+   "n80_aproximado": 905.8120324106752
   }
  }
 }

@@ -84,8 +84,16 @@ for top in ['0.1','0.01']:
     for b in ['1.0','4.0']:
         ref=C0['resultados'][f'D_extremos|normal|{top}|uniforme|{b}']['recall']
         assert abs(e['uniforme'][b]-ref)<0.03,(top,b,e['uniforme'][b],ref)
-assert 0<OL['rho']['valor']<=1.05 and OL['potencia']['0.1']['potencia_5pct']<0.5
-print(f"Objetivo largo: ρ = {OL['rho']['valor']:.2f}; con ρ = 1 reproduce la simulación principal; potencia de la campaña real {OL['potencia']['0.1']['potencia_5pct']:.2f}.")
+assert 0<OL['rho']['valor']<=1.05
+DET=OL['detectabilidad']
+assert not DET['metodo']['prueba_bootstrap_real_reproducida']
+assert not DET['metodo']['distribucion_nula_simulada']
+for top in ['0.1','0.2']:
+    assert 0<=DET[top]['fraccion_sobre_umbral_196sd']<=1
+    assert DET[top]['sd_entre_campanas']>0 and DET[top]['n80_aproximado']>0
+assert 'r_combinado' not in M['cota_fiabilidad'] and 'techo_combinado' not in M['cota_fiabilidad']
+assert np.isclose(M['cota_fiabilidad']['r_minimo_plugin'],M['todas']['pearson']**2)
+print(f"Objetivo largo: ρ = {OL['rho']['valor']:.2f}; caso ρ = 1 verificado; detectabilidad identificada como aproximación, no potencia de la prueba real.")
 
 # Ampliación: mismos sistemas que el piloto, controles iguales a la tabla de HTP-MD y macros coherentes con el JSON
 EA=pd.read_csv('resultados/etiquetas_ampliacion.csv')

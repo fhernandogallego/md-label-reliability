@@ -1,4 +1,4 @@
-"""¿Sobrevive el ahorro de la asignación adaptativa si el objetivo es la corrida larga? ¿Podía la comprobación real confirmarlo?
+"""¿Sobrevive el ahorro de la asignación adaptativa si el objetivo es la corrida larga? ¿Qué variabilidad muestra una minicampaña simulada?
 
 R1. Objetivo a tiempo largo. asignacion.py busca el top-k según la etiqueta esperada de 5 ns (μ). Aquí el objetivo es el
     top-k según la referencia de la corrida de 50 ns (L, D_app a 25 ns). Calibración: en los 92 sistemas de cribado con
@@ -7,10 +7,11 @@ R1. Objetivo a tiempo largo. asignacion.py busca el top-k según la etiqueta esp
     las dos corridas cortas en el mismo subconjunto. Intervalo por bootstrap de sistemas. En las campañas simuladas,
     L = ρ·μ/σ_sis + √(1−ρ²)·z (solo importa el orden) y se mide el recall del top-k de L con réplicas uniformes y con la
     asignación en la frontera, para ρ estimada, su extremo inferior y ρ = 1 (el caso de asignacion.py).
-R2. Potencia de la minicampaña real (validacion_asignacion.py): 92 sistemas, k = 9 (top 10 %) o 18 (top 20 %), 46
+R2. Detectabilidad aproximada en minicampañas simuladas (validacion_asignacion.py): 92 sistemas, k = 9 (top 10 %) o 18 (top 20 %), 46
     segundas corridas en la frontera o al azar. Se simulan muchas campañas de ese tamaño con el ruido calibrado en los
     pares reales y se mide la ventaja esperada de la frontera sobre el azar (media de 50 asignaciones aleatorias, como en la
-    comprobación real), su dispersión entre campañas, la potencia de una prueba al 5 % y el tamaño que daría un 80 %.
+    comprobación real), su dispersión entre campañas, la fracción sobre el umbral normal 1,96·SD y una extrapolación orientativa de tamaño.
+    No reproduce la prueba bootstrap real ni su calibración bajo la hipótesis nula.
 
 Lee resultados/tabla_por_trayectoria.csv, resultados/techo.json, resultados/incertidumbre.json y
 resultados/asignacion.json (para comprobar que la calibración coincide). No necesita data/.
@@ -22,14 +23,14 @@ import pandas as pd
 from scipy import stats
 from comun import N_BOOT, SEMILLA_BOOT, ic, originales_cribado
 
-N_MC, N_MC_POT, N_AZAR, TANDA, SEMILLA = 100, 2000, 50, 0.05, 20261118
+N_MC, N_MC_DET, N_AZAR, TANDA, SEMILLA = 100, 2000, 50, 0.05, 20261118
 PRESUPUESTOS = [1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0]
 TOPS = [0.01, 0.10]
 
 T = pd.read_csv("resultados/tabla_por_trayectoria.csv")
 H = json.load(open("resultados/techo.json")); U = json.load(open("resultados/incertidumbre.json"))["replicas"]
 poblacion = originales_cribado(T); N = len(poblacion)
-R = {"N": N, "n_mc": N_MC, "n_mc_potencia": N_MC_POT, "semilla": SEMILLA}
+R = {"N": N, "n_mc": N_MC, "n_mc_detectabilidad": N_MC_DET, "semilla": SEMILLA}
 
 # ---------- R1a. Correlación entre la etiqueta corta esperada y la referencia larga ----------
 cortas = T[(T.ns == 5) & ~T.literatura]
@@ -116,7 +117,7 @@ for nombre, rh in ESCENARIOS.items():
         print(f"ρ={rh:.2f} top {top:.0%}: techo {e['techo_recall']:.2f}; uniforme 1/4: {e['uniforme']['1.0']:.2f}/{meta:.2f}; "
               f"frontera iguala 4 con {beq} (ahorro {e['ahorro_frente_a_4']})", flush=True)
 
-# ---------- R2. Potencia de la minicampaña real ----------
+# ---------- R2. Detectabilidad aproximada en minicampañas simuladas ----------
 ref_par = lambda x, y: (lambda d, nivel: {"s_run": d.std(ddof=1) / np.sqrt(2),
                                           "lento": d[nivel < np.median(nivel)].std(ddof=1) / np.sqrt(2),
                                           "rapido": d[nivel >= np.median(nivel)].std(ddof=1) / np.sqrt(2)})(x - y, (x + y) / 2)
@@ -145,11 +146,16 @@ def frontera_c(y1, y2, k, lote=5):
     return usa
 
 
-R["potencia"] = {"n_sistemas": n_c, "segundas": extra, "ruido": P}
+R["detectabilidad"] = {
+    "n_sistemas": n_c, "segundas": extra, "ruido": P,
+    "metodo": {"umbral_sd": 1.96, "distribucion_nula_simulada": False,
+               "prueba_bootstrap_real_reproducida": False, "ruido_reajustado_por_campana": False,
+               "extrapolacion_N": "Gaussian approximation with SD proportional to N^(-1/2); not validated across sample sizes."}
+}
 g = np.random.default_rng(SEMILLA + 1)
 for top in (0.10, 0.20):
     k = max(1, round(top * n_c)); difs = []
-    for _ in range(N_MC_POT):
+    for _ in range(N_MC_DET):
         mu = g.normal(0, P["s_sis"], n_c); y1 = mu + g.standard_normal(n_c) * sg(mu); y2 = mu + g.standard_normal(n_c) * sg(mu)
         verdad = set(np.argsort(-mu)[:k])
         f_ = len(verdad & sel_c(y1, y2, frontera_c(y1, y2, k), k)) / k
@@ -157,12 +163,12 @@ for top in (0.10, 0.20):
                       for _ in range(N_AZAR)])
         difs.append(f_ - az)
     d = np.array(difs); media, sd = float(d.mean()), float(d.std(ddof=1))
-    potencia = float(np.mean(d > 1.96 * sd))
+    fraccion_umbral = float(np.mean(d > 1.96 * sd))
     n80 = float(n_c * ((stats.norm.ppf(0.975) + stats.norm.ppf(0.8)) * sd / media) ** 2) if media > 0 else None
-    R["potencia"][str(top)] = {"k": k, "ventaja_media": media, "sd_entre_campanas": sd, "potencia_5pct": potencia,
-                               "prob_ventaja_no_positiva": float(np.mean(d <= 0)), "sistemas_para_80pct": n80}
-    print(f"potencia top {top:.0%} (k={k}): ventaja media {100 * media:.1f} puntos, sd {100 * sd:.1f}, potencia {potencia:.2f}, "
-          f"P(≤0) {np.mean(d <= 0):.2f}, sistemas para 80 %: {n80:.0f}", flush=True)
+    R["detectabilidad"][str(top)] = {"k": k, "ventaja_media": media, "sd_entre_campanas": sd, "fraccion_sobre_umbral_196sd": fraccion_umbral,
+                               "prob_ventaja_no_positiva": float(np.mean(d <= 0)), "n80_aproximado": n80}
+    print(f"detectabilidad aproximada top {top:.0%} (k={k}): ventaja media {100 * media:.1f} puntos, sd {100 * sd:.1f}, fracción sobre 1.96·SD {fraccion_umbral:.2f}, "
+          f"P(≤0) {np.mean(d <= 0):.2f}, escala N80 aproximada: {n80:.0f}", flush=True)
 
 json.dump(R, open("resultados/objetivo_largo.json", "w"), indent=1)
 
@@ -177,10 +183,10 @@ for nombre, nn in (("estimada", "Est"), ("inferior", "Low"), ("uno", "One")):
                    f"ol{nn}Top{nt}Eq": f1(e["presupuesto_igual_4"]) if e["presupuesto_igual_4"] else "n/a",
                    f"ol{nn}Top{nt}Saving": f1(e["ahorro_frente_a_4"]) if e["ahorro_frente_a_4"] else "n/a"})
 for top, nt in ((0.10, "Ten"), (0.20, "Twenty")):
-    e = R["potencia"][str(top)]
-    Mc.update({f"olPow{nt}Adv": f1(100 * e["ventaja_media"]), f"olPow{nt}Sd": f1(100 * e["sd_entre_campanas"]),
-               f"olPow{nt}Pct": pc(e["potencia_5pct"]), f"olPow{nt}NoGainPct": pc(e["prob_ventaja_no_positiva"]),
-               f"olPow{nt}NEighty": f"{e['sistemas_para_80pct']:,.0f}".replace(",", "{,}") if e["sistemas_para_80pct"] else "n/a"})
+    e = R["detectabilidad"][str(top)]
+    Mc.update({f"olDet{nt}Adv": f1(100 * e["ventaja_media"]), f"olDet{nt}Sd": f1(100 * e["sd_entre_campanas"]),
+               f"olDet{nt}Pct": pc(e["fraccion_sobre_umbral_196sd"]), f"olDet{nt}NoGainPct": pc(e["prob_ventaja_no_positiva"]),
+               f"olDet{nt}NScale": f"{100 * round(e['n80_aproximado'] / 100):,}".replace(",", "{,}") if e["n80_aproximado"] else "n/a"})
 with open("paper/numeros_objetivo_largo.tex", "w") as fh:
     fh.write("% Generado por objetivo_largo.py a partir de resultados/objetivo_largo.json. No editar a mano.\n")
     for kk, v in Mc.items(): fh.write(f"\\newcommand{{\\{kk}}}{{{v}}}\n")

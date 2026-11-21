@@ -300,14 +300,20 @@ The diffusivity roughly doubles at \SI{393}{\kelvin} (apparent activation energy
 \SI{\ampEndTEa}{\kilo\joule\per\mole}), while the dynamic noise on the logarithmic scale is similar,
 so its scale is not specific to \SI{353}{\kelvin}. The reliability at \SI{393}{\kelvin} would also
 depend on the spread of the screening population at that temperature, which these runs do not
-measure. The larger box leaves the
-diffusivity unchanged within the intervals, so finite-size effects are small at this size. Its
+measure. For the larger box, the data show no conclusive mean diffusivity shift in these four systems:
+the end-point interval
+allows ratios from \ampEndBoxRatioLo{} to \ampEndBoxRatioHi{}. No equivalence margin was tested,
+so these data do not establish negligible finite-size bias. The estimated
 dynamic noise falls by less than the factor $1/\sqrt{8}$ expected if each ion contributed
 independently (\ampStatNoise{} for the end-point label). Either part of the noise is collective, or
 the eight copies, which start from the same configuration and are decorrelated for only
 \SI{1}{\nano\second}, remain partly correlated; with \ampBoxN{} systems the two cannot be told apart.
-In either case an eight-fold larger system, which costs at least eight times more per run, is
-worth about \ampEndBoxEquivRuns{} averaged runs of the original size.
+The point-estimate ratio of dynamic variances corresponds to averaging about
+\ampEndBoxEquivRuns{} original-box runs for the end-point estimator, assuming independent
+sampling. The larger box has eight times the atoms; wall-time and equilibration costs were
+not benchmarked. The reference pool also includes an exact re-run, so it need not comprise
+independent dynamical realizations. These comparisons do not rank replication and larger
+boxes for equilibrium-transport accuracy or structural sampling.
 Because the replicated box keeps the starting structure, these runs do not test the structural
 share.
 
@@ -568,24 +574,34 @@ initialization. The direction and size of the effect on policy comparisons are n
 it does not explain the top-20\% result by itself. Calibration predicts a second noisy label,
 not latent top-set membership. The campaign also fits noise to its own pairs and is exploratory.
 
-\emph{Power.} Campaigns of the same size simulated with the calibrated noise (2,000 campaigns,
+\paragraph{Approximate detectability.} Campaigns of the same size simulated with fixed calibrated noise (2,000 campaigns,
 evaluated against the expected-label top set, 50 random placements each) give an expected
-advantage of boundary over random placement of \olPowTenAdv{} percentage points for the top 10\%
-(standard deviation \olPowTenSd{} between campaigns; no advantage in \olPowTenNoGainPct\% of them)
-and \olPowTwentyAdv{} points for the top 20\% (\olPowTwentySd; \olPowTwentyNoGainPct\%). A 5\% test
-detects the advantage in \olPowTenPct\% and \olPowTwentyPct\% of such campaigns; 80\% power would
-need about \olPowTenNEighty{} and \olPowTwentyNEighty{} systems with two runs each.
+advantage of boundary over random placement of \olDetTenAdv{} percentage points for the top 10\%
+(standard deviation \olDetTenSd{} between campaigns; no advantage in \olDetTenNoGainPct\% of them)
+and \olDetTwentyAdv{} points for the top 20\% (\olDetTwentySd; \olDetTwentyNoGainPct\%).
+For simulated advantage $\Delta$ and its between-campaign SD $s_\Delta$, the empirical fraction
+with $\Delta>1.96s_\Delta$ is \olDetTenPct\% and \olDetTwentyPct\%, respectively. This is a
+normal-threshold diagnostic under the alternative distribution, not calibrated power for the
+actual bootstrap test: no null distribution or noise-refitting uncertainty is simulated.
+Assuming Gaussian errors and $s_\Delta\propto N^{-1/2}$, the planning approximation
+$\widetilde N_{80}=N[(z_{0.975}+z_{0.8})s_\Delta/\overline\Delta]^2$ gives roughly
+\olDetTenNScale{} and \olDetTwentyNScale{} systems. This extrapolation was not checked with
+campaigns at those sizes and is not a validated sample-size requirement.
 
 \section{Allocation with the long run as target}\label{si:sec:long-target}
 The \olN{} screening systems with a replica and a long run give the correlation between the
 expected short label and the long-run reference ($D_\mathrm{app}$ at \SI{25}{\nano\second}):
 the replica, which starts from a structure independent of the long run, correlates \olCorrBL{}
 with it, and the two short runs correlate \olCorrAB{} with each other, so
-$\rho = \olCorrBL/\sqrt{\olCorrAB} = \olRho$ (bootstrap 95\% interval \olRhoLo{} to 1). The
+$\rho = \olCorrBL/\sqrt{\olCorrAB} = \olRho$ (bootstrap percentile interval \olRhoLo{} to 1;
+the unconstrained ratio bootstrap extends above 1 and is truncated at the correlation boundary).
+The sensitivity model assumes a Gaussian joint distribution. The
 campaigns of \cref{si:sec:alloc} are repeated with the top $k$ defined by a long-run value
 $\lambda = \rho\,\mu/\sigma_\mathrm{sys} + \sqrt{1-\rho^2}\,z$, $z\sim\mathcal{N}(0,1)$, with the
 same noise model, policies and 100 campaigns per setting. With $\rho=1$ the results reproduce the
-main analysis. The ceiling is the recall obtained by selecting on the exact expected short label.
+main analysis. The oracle recall is the Monte Carlo mean obtained by selecting on the exact
+expected short label under this joint model. It is not an empirical ceiling for arbitrary
+policies or a guarantee for each campaign realization.
 
 \begin{table}[ht]
 \centering
@@ -596,7 +612,7 @@ boundary-focused allocation matches four uniform replicates, and the saving.}
 \small
 \begin{tabular}{llcccccc}
 \toprule
-Target & $\rho$ & Ceiling & Uniform, 1 & Uniform, 4 & Boundary, 2 & Equivalent & Saving \\
+Target & $\rho$ & Oracle & Uniform, 1 & Uniform, 4 & Boundary, 2 & Equivalent & Saving \\
 \midrule
 Top 10\% & 1 & \olOneTopTenCeil\% & \olOneTopTenUnifOne\% & \olOneTopTenUnifFour\% & \olOneTopTenBoundTwo\% & \olOneTopTenEq & $\times$\olOneTopTenSaving \\
  & \olRho & \olEstTopTenCeil\% & \olEstTopTenUnifOne\% & \olEstTopTenUnifFour\% & \olEstTopTenBoundTwo\% & \olEstTopTenEq & $\times$\olEstTopTenSaving \\

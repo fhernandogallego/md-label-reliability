@@ -63,3 +63,22 @@ the HTP-MD control labels of those systems. `ampliacion.py` computes the ratios,
 estimates and system-bootstrap intervals (`ampliacion.json`, `paper/numeros_ampliacion.tex`).
 With these sample sizes the intervals are descriptive. The replicated box keeps the starting
 structure, so these runs do not test the structural share of the noise.
+The four-system box comparison has no prespecified equivalence margin; its intervals do not
+establish negligible finite-size bias. The point variance ratio only describes dynamic precision
+under the stated independence assumptions, and wall-time costs were not benchmarked.
+
+## Long-run target and approximate detectability
+
+`objetivo_largo.json` contains calibrated Gaussian sensitivity scenarios whose oracle recall is
+the mean recall from selecting on the exact expected short label. This is not an empirical
+ceiling for arbitrary policies or equilibrium transport. `detectabilidad` retains the simulated
+advantage distribution's mean, SD and the fraction exceeding 1.96 times that SD. No null
+distribution, actual bootstrap test or per-campaign noise refitting is simulated. The rough
+`n80_aproximado` extrapolation assumes Gaussian errors and SD proportional to N^(-1/2); it is
+not a validated sample-size requirement. Version 1.0.11 replaces the earlier misleading
+`potencia` field names without changing the simulation design or numerical estimates.
+
+The `cota_fiabilidad` fields in `ml_demo.json` are plug-in diagnostics of the population inequality
+r >= corr(prediction, label)^2 under independent evaluation noise. They do not define a new
+reliability estimate or a calibrated combined confidence interval. The replica-based estimate
+and interval remain the reported reliability and ceiling.

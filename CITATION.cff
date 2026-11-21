@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: "If you use this code or data, please cite the paper and this software."
 title: "Reliability of short molecular dynamics runs as screening labels: code and derived data"
-version: "1.0.10"
-date-released: "2026-11-18"
+version: "1.0.11"
+date-released: "2026-11-21"
 license: MIT
 repository-code: "https://github.com/fhernandogallego/md-label-reliability"
-url: "https://github.com/fhernandogallego/md-label-reliability/releases/tag/v1.0.8"
+url: "https://github.com/fhernandogallego/md-label-reliability/releases/tag/v1.0.11"
 authors:
   - family-names: "Hernando-Gallego"
     given-names: "Francisco"
