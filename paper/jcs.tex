@@ -56,15 +56,16 @@ segments distinguish trajectory ageing from observation-lag dependence: the firs
 a median \segEndFirst{} times faster than segments at 25--\SI{50}{\nano\second}, consistent
 with slow relaxation. From \nRep{} replicated screening systems, end-point-label reliability
 is \RepEndIcc{} (95\% CI \RepEndIccLo{} to \RepEndIccHi), implying an additive-model
-population correlation ceiling of \techoEndCorr{}. A fingerprint random forest reaches
-\mlCorr{}, compatible with the uncertain ceiling. Comparisons of dynamical realizations
+population correlation ceiling of \techoEndCorr{}. A fingerprint random forest already reaches
+\mlCorr{}, at the level of this ceiling, so single-run labels strongly limit model evaluation. Comparisons of dynamical realizations
 conditionally attribute about half of the run-to-run variance to initial structure. A new
 \pilRuns{}-run pilot in \pilN{} systems supports the protocol and dynamical-noise scale.
 In calibrated campaign simulations, adaptive replication matches four uniform replicates using
 \alEqTopTenUnifFour{} runs per candidate for the top 10\% and \alEqTopOneUnifFour{} for the top
-1\% by expected short-run label. In a calibrated Gaussian sensitivity model with the long-run
-reference as target, savings are $\times$\olEstTopTenSaving{} and $\times$\olEstTopOneSaving.
-The real-run comparison remains inconclusive.
+1\% by expected short-run label. The savings persist with the long-run
+reference as target ($\times$\olEstTopTenSaving{} and $\times$\olEstTopOneSaving{} in a calibrated
+Gaussian sensitivity model). A \valAlNCamp{}-system real-run comparison is too small to resolve
+the predicted advantage.
 \ifconductivityready Anion diffusivity and cluster conductivity extend the audit within the same dataset.
 \else Anion diffusivity extends the audit within the same dataset.\fi
 \end{abstract}
@@ -457,7 +458,8 @@ Chemical-family splits give \mlFamFineCorr{} and
 (Supplementary Material), so they test interpolation within this chemical space.
 
 The model correlation slightly exceeds the point estimate of the ceiling, whose uncertainty
-rests on \nRep{} pairs. Under the additive model, if the prediction is independent of the
+rests on \nRep{} pairs. All monomers are distinct, so the excess does not come from duplicated
+systems shared between training and test folds. Under the additive model, if the prediction is independent of the
 evaluation-run noise, the population identity is
 $\rho(f,y)=\rho(f,\mu)\sqrt{r}$, implying $r\ge\rho(f,y)^2$.
 Substituting the estimated correlation gives \mlRelBound{}; squaring its lower confidence
@@ -743,8 +745,8 @@ campaign-specific noise audit and an explicit physical target.
 \section*{Data and code availability}
 HTP-MD trajectories and curves are available from the Toyota Research Institute
 platform~\cite{Xie2023HTPMD}. The scripts and derived inputs for this submission are fixed in
-version 1.0.11 (21 November 2026):
-\url{https://github.com/fhernandogallego/md-label-reliability/tree/v1.0.11}.
+version 1.0.12 (24 November 2026):
+\url{https://github.com/fhernandogallego/md-label-reliability/tree/v1.0.12}.
 The project archive is indexed by the Zenodo concept DOI
 \url{https://doi.org/10.5281/zenodo.23483460}; the submission snapshot is identified by the tag above.
 Raw trajectories are not redistributed. Released inputs reproduce the tables and figures,

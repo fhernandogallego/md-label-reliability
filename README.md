@@ -5,10 +5,10 @@ Noise Ceilings, Time Dependence and Adaptive Replicate Allocation"* (F. Hernando
 D. García-Santos, A. Campo-Camacho, A. Gómez-Gómez). Preprint: ChemRxiv,
 https://doi.org/10.26434/chemrxiv.15010895/v1.
 
-The JCS submission snapshot is [version 1.0.11](https://github.com/fhernandogallego/md-label-reliability/releases/tag/v1.0.11)
-(21 November 2026). It includes the full conductivity analysis, the reproducible 50-run SCAYLE
+The JCS submission snapshot is [version 1.0.12](https://github.com/fhernandogallego/md-label-reliability/releases/tag/v1.0.12)
+(24 November 2026). It includes the full conductivity analysis, the reproducible 50-run SCAYLE
 pilot and the allocation analysis with the long run as target. All versions are archived on Zenodo
-under [10.5281/zenodo.23483460](https://doi.org/10.5281/zenodo.23483460); use version 1.0.11 for
+under [10.5281/zenodo.23483460](https://doi.org/10.5281/zenodo.23483460); use version 1.0.12 for
 the present manuscript.
 
 The analysis uses the public HTP-MD collection of polymer electrolyte simulations (Xie et al., *Nat. Commun.*

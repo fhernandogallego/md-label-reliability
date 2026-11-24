@@ -1,7 +1,7 @@
 {
   "title": "Reliability of short molecular dynamics runs as screening labels: code and derived data",
   "upload_type": "software",
-  "description": "JCS submission snapshot v1.0.11 of the analysis code and compact inputs for 'Reliability of Short Molecular Dynamics Runs as Screening Labels: Noise Ceilings, Time Dependence and Adaptive Replicate Allocation'. Includes the conductivity analysis, all 50 SCAYLE pilot runs and 20 HTP-MD controls with dispersion by run type, the allocation analysis with the long run as target and a descriptive normal-threshold detectability diagnostic, system-bootstrap intervals and manuscript sources. Model-derived oracle recall is conditional on a calibrated Gaussian sensitivity model; the diagnostic is not calibrated power of the real-run bootstrap test. No combined reliability confidence interval is asserted. Code is MIT-licensed; data rights and upstream CC BY-NC 4.0 notices are specified in LICENSE-data and resultados/README_fuentes.md. All tables, numbers and figures are regenerated from released inputs; raw trajectories are not redistributed.",
+  "description": "JCS submission snapshot v1.0.12 of the analysis code and compact inputs for 'Reliability of Short Molecular Dynamics Runs as Screening Labels: Noise Ceilings, Time Dependence and Adaptive Replicate Allocation'. Includes the conductivity analysis, all 50 SCAYLE pilot runs and 20 HTP-MD controls with dispersion by run type, the allocation analysis with the long run as target and a descriptive normal-threshold detectability diagnostic, system-bootstrap intervals and manuscript sources. Model-derived oracle recall is conditional on a calibrated Gaussian sensitivity model; the diagnostic is not calibrated power of the real-run bootstrap test. No combined reliability confidence interval is asserted. Code is MIT-licensed; data rights and upstream CC BY-NC 4.0 notices are specified in LICENSE-data and resultados/README_fuentes.md. All tables, numbers and figures are regenerated from released inputs; raw trajectories are not redistributed.",
   "license": "MIT",
   "creators": [
     {
@@ -49,6 +49,6 @@
       "scheme": "doi"
     }
   ],
-  "version": "1.0.11",
-  "publication_date": "2026-11-21"
+  "version": "1.0.12",
+  "publication_date": "2026-11-24"
 }
